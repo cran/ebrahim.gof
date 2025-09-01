@@ -1,0 +1,16 @@
+76213f05933d6473cfdda3d4e8bec6ae *DESCRIPTION
+cc98feabfa3f636d2d41732772b69a37 *NAMESPACE
+1399da6a514332a09a9dc38abfcfd19e *NEWS.md
+4a42c0e519df6d790b61446d74ce28f4 *R/ebrahim_farrington_test.R
+e4daada26bef2162bbc048af9b28e6b0 *README.md
+23c5e19423bc9f95bf046bac6e749bc4 *build/vignette.rds
+ae1aad470c856052bbfaa26b01872a07 *inst/doc/ebrahim-farrington-intro.R
+1d7bc8967a31e6bd4f6524edf8e5567e *inst/doc/ebrahim-farrington-intro.Rmd
+2dbff450727b66d766729aada4e22fc8 *inst/doc/ebrahim-farrington-intro.html
+646e75b480b919b79c2a9f2ff90bb801 *man/ef.gof.Rd
+d1fb5102107747d359271b0cd73239ba *tests/testthat.R
+6e17b3df6336b5b9875ebc736de355c9 *tests/testthat/test-ebrahim-farrington.R
+4423e9dc028daa1c9d464c63f0d20565 *vignettes/Power_Comparison_All_Scenarios_Combined.png
+1d7bc8967a31e6bd4f6524edf8e5567e *vignettes/ebrahim-farrington-intro.Rmd
+516c2b9856d83cf6e95fd4fa5ca81eca *vignettes/farrington_cdf_comparison_multi_indep.png
+3a0ca1c0d1778b31eef21e870be86040 *vignettes/farrington_cdf_comparison_u_3_3.png
