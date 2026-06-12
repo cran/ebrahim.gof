@@ -12,7 +12,7 @@
 
 <meta name="author" content="Ebrahim Khaled Ebrahim" />
 
-<meta name="date" content="2025-08-27" />
+<meta name="date" content="2026-06-11" />
 
 <title>Introduction to the Ebrahim-Farrington Goodness-of-Fit Test</title>
 
@@ -50,8 +50,9 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -62,7 +63,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -341,7 +342,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore">Introduction to the Ebrahim-Farrington
 Goodness-of-Fit Test</h1>
 <h4 class="author">Ebrahim Khaled Ebrahim</h4>
-<h4 class="date">2025-08-27</h4>
+<h4 class="date">2026-06-11</h4>
 
 
 
@@ -401,7 +402,7 @@ test:</p>
 <span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">ef.gof</span>(y, predicted_probs, <span class="at">G =</span> <span class="dv">10</span>)</span>
 <span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="fu">print</span>(result)</span>
 <span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;                 Test Test_Statistic   p_value</span></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; 1 Ebrahim-Farrington      -1.250567 0.8944537</span></span></code></pre></div>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; 1 Ebrahim-Farrington      -1.250567 0.9344997</span></span></code></pre></div>
 </div>
 <div id="understanding-the-test-statistic" class="section level2">
 <h2>Understanding the Test Statistic</h2>
@@ -429,11 +430,11 @@ affect the test’s performance:</p>
 <span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>)</span>
 <span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="fu">print</span>(results)</span>
 <span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;   Groups   P_value</span></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 1      4 0.7597797</span></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; 2      8 0.3993666</span></span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; 3     10 0.8944537</span></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; 4     15 0.7542151</span></span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; 5     20 0.3920783</span></span></code></pre></div>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 1      4 0.7449740</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; 2      8 0.3317745</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; 3     10 0.9344997</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; 4     15 0.7347885</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; 5     20 0.3532473</span></span></code></pre></div>
 </div>
 <div id="comparison-with-hosmer-lemeshow-test" class="section level2">
 <h2>Comparison with Hosmer-Lemeshow Test</h2>
@@ -459,110 +460,271 @@ Hosmer-Lemeshow test:</p>
 <span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>}</span>
 <span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; ResourceSelection 0.3-6   2023-06-27</span></span>
 <span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt;                         Test   P_value Test_Statistic</span></span>
-<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt;           Ebrahim-Farrington 0.8944537      -1.250567</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt;           Ebrahim-Farrington 0.9344997      -1.250567</span></span>
 <span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; X-squared    Hosmer-Lemeshow 0.9431075       2.855296</span></span></code></pre></div>
+</div>
+<div id="new-in-2.0.0-directed-test-ensemble-and-the-full-battery" class="section level2">
+<h2>New in 2.0.0: Directed test, ensemble, and the full battery</h2>
+<p>Version 2.0.0 turns the package into a full goodness-of-fit toolkit.
+The <strong>Directed EF (DEF)</strong> test concentrates power on
+calibration-curve shape directions, <code>def.ensemble.gof()</code>
+combines the DEF bases via the Cauchy combination test, and
+<code>run.all.gof()</code> runs a whole battery of GOF tests at
+once.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Directed Ebrahim-Farrington test (takes the fitted model)</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">def.gof</span>(model)                       <span class="co"># default poly3 basis</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt;                          Test Basis Test_Statistic       df        Method</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; 1 Directed Ebrahim-Farrington poly3      0.1333555 2.058835 satterthwaite</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt;     p_value</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; 1 0.9394923</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="fu">def.gof</span>(model, <span class="at">basis =</span> <span class="st">&quot;ensemble&quot;</span>)   <span class="co"># combine all three bases (Cauchy)</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt;           Test Combiner         Components k   p_value</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; 1 DEF ensemble      cct poly2+poly3+stukel 3 0.8921128</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co"># Ensemble of the three DEF bases</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="fu">def.ensemble.gof</span>(model)</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;           Test Combiner         Components k   p_value</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt; 1 DEF ensemble      cct poly2+poly3+stukel 3 0.8921128</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="fu">def.ensemble.gof</span>(model, <span class="at">add_ef =</span> <span class="cn">TRUE</span>)   <span class="co"># add the omnibus EF</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt;           Test Combiner            Components k   p_value</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt; 1 DEF ensemble      cct poly2+poly3+stukel+EF 4 0.9070102</span></span></code></pre></div>
+<p><code>run.all.gof()</code> returns one tidy data frame, one row per
+test:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">run.all.gof</span>(model)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co">#&gt;                      Test          Family     Statistic         df    p_value</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; 1                 Pearson          Global 500.189779915 498.000000 0.46398355</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; 2                Deviance          Global 548.361194487 498.000000 0.05868791</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; 3             Osius-Rojek    Standardized   0.124150785         NA 0.90119589</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; 4               Copas-RSS    Standardized   0.001485027   1.000000 0.99881512</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; 5      Information-Matrix          Global   0.017967854   2.000000 0.99105631</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; 6                      HL       Partition   2.855296455   8.000000 0.94310750</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; 7           HL-equalwidth       Partition   4.860031216   8.000000 0.77242612</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; 8            Pigeon-Heyse       Partition   2.877438508   9.000000 0.96895634</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; 9                      EF    Standardized  -1.250566694   8.000000 0.93449972</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt; 10              EF-normal    Standardized  -1.250566694   8.000000 0.89445370</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt; 11              DEF.poly2        Directed   0.061762126   1.076818 0.82265331</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; 12              DEF.poly3        Directed   0.133355497   2.058835 0.93949233</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; 13             DEF.stukel        Directed   0.319113754   2.002282 0.83134362</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; 14                 Stukel        Directed   0.030567470   2.000000 0.98483247</span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; 15                Tsiatis Covariate-space   5.778041795   9.000000 0.76191087</span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt; 16                    Xie Covariate-space   8.311608210   8.500000 0.45352565</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt; 17    Pulkstenis-Robinson Covariate-space            NA         NA         NA</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt; 18    Ensemble.Vote(3DEF)        Ensemble            NA         NA 0.89211275</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; 19 Ensemble.Univ(3DEF+EF)        Ensemble            NA         NA 0.90701023</span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt;                         Note</span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; 1                           </span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt; 2                           </span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; 3                           </span></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; 4                           </span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; 5                           </span></span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt; 6                           </span></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt; 7                           </span></span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt; 8                           </span></span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt; 9                           </span></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt; 10 normal reference (thesis)</span></span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt; 11                          </span></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt; 12                          </span></span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt; 13                          </span></span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt; 14                          </span></span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt; 15                          </span></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt; 16                          </span></span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt; 17  no categorical covariate</span></span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt; 18                       CCT</span></span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#&gt; 19                       CCT</span></span></code></pre></div>
+<p>Add <code>include_slow = TRUE</code> to also run the opt-in slow
+tests (le Cessie, the GAM-based tests, Stute-Zhu, eHL, BAGofT, and the
+Lai &amp; Liu standardized-power test), or pass
+<code>tests = c(&quot;EF&quot;, &quot;DEF.poly3&quot;, &quot;HL&quot;)</code> to run a chosen
+subset.</p>
+<div id="powerful-but-not-liberal" class="section level3">
+<h3>Powerful, but not liberal</h3>
+<p>Most GOF tests for logistic regression are
+<strong>partition-based</strong> (they group the data and compare
+observed with expected counts), and that is the family
+<code>ef.gof()</code> and <code>def.gof()</code> belong to. A key
+property of the directed tests is that they gain power
+<strong>without</strong> inflating the type I error rate. In a Monte
+Carlo study (n = 500, 1000 replications, α = 0.05), the partition tests
+compare as follows:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Test</th>
+<th align="center">Size (null)</th>
+<th align="center">Power: quadratic</th>
+<th align="center">Power: wrong link</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Hosmer–Lemeshow (decile)</td>
+<td align="center">0.060</td>
+<td align="center">0.588</td>
+<td align="center">0.179</td>
+</tr>
+<tr class="even">
+<td>Hosmer–Lemeshow (equal-width)</td>
+<td align="center">0.053</td>
+<td align="center">0.332</td>
+<td align="center">0.244</td>
+</tr>
+<tr class="odd">
+<td>Pigeon–Heyse</td>
+<td align="center">0.035</td>
+<td align="center">0.535</td>
+<td align="center">0.133</td>
+</tr>
+<tr class="even">
+<td>EF (omnibus)</td>
+<td align="center">0.058</td>
+<td align="center">0.480</td>
+<td align="center">0.218</td>
+</tr>
+<tr class="odd">
+<td>Tsiatis</td>
+<td align="center">0.056</td>
+<td align="center">0.574</td>
+<td align="center">0.162</td>
+</tr>
+<tr class="even">
+<td>Xie</td>
+<td align="center">0.042</td>
+<td align="center">0.557</td>
+<td align="center">0.147</td>
+</tr>
+<tr class="odd">
+<td>DEF (poly3)</td>
+<td align="center">0.060</td>
+<td align="center">0.709</td>
+<td align="center">0.404</td>
+</tr>
+<tr class="even">
+<td>DEF (ensemble, vote)</td>
+<td align="center">0.066</td>
+<td align="center">0.767</td>
+<td align="center">0.468</td>
+</tr>
+</tbody>
+</table>
+<p>DEF and its vote ensemble are the most powerful in the family while
+keeping the size near the nominal 0.05 — they are not liberal — and they
+roughly double the power of Hosmer–Lemeshow, Tsiatis, and Xie on the
+wrong-link misfit.</p>
+<p>Partition-based tests are intuitive and work for sparse data and
+continuous covariates (where the Pearson and deviance chi-square tests
+fail), but their result depends on the grouping choice and the simpler
+members (HL) can have low power. DEF keeps the intuitive
+fitted-probability grouping but <em>directs</em> the test at
+calibration-curve shapes, which is why it tops the table without losing
+size control.</p>
+<blockquote>
+<p>Note: as of 2.0.0, <code>ef.gof()</code> defaults to the chi-square
+reference (<code>method = &quot;chisq&quot;</code>); use
+<code>method = &quot;normal&quot;</code> for the version 1.0.0 behaviour.</p>
+</blockquote>
+</div>
 </div>
 <div id="power-analysis-example" class="section level2">
 <h2>Power Analysis Example</h2>
 <p>Let’s examine the power of the test to detect model
 misspecification:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Function to simulate power under model misspecification</span></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>simulate_power <span class="ot">&lt;-</span> <span class="cf">function</span>(n, <span class="at">beta_quad =</span> <span class="fl">0.1</span>, <span class="at">n_sims =</span> <span class="dv">100</span>, <span class="at">G =</span> <span class="dv">10</span>) {</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  rejections_ef <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  rejections_hl <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  </span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_sims) {</span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>    <span class="co"># Generate data with quadratic term (true model)</span></span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">runif</span>(n, <span class="sc">-</span><span class="dv">2</span>, <span class="dv">2</span>)</span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>    linpred_true <span class="ot">&lt;-</span> <span class="dv">0</span> <span class="sc">+</span> x <span class="sc">+</span> beta_quad <span class="sc">*</span> x<span class="sc">^</span><span class="dv">2</span></span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>    prob_true <span class="ot">&lt;-</span> <span class="fu">plogis</span>(linpred_true)</span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>    y <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="dv">1</span>, prob_true)</span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>    </span>
-<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>    <span class="co"># Fit misspecified linear model (omitting quadratic term)</span></span>
-<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>    model_mis <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> x, <span class="at">family =</span> <span class="fu">binomial</span>())</span>
-<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>    pred_probs <span class="ot">&lt;-</span> <span class="fu">fitted</span>(model_mis)</span>
-<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>    </span>
-<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>    <span class="co"># Ebrahim-Farrington test</span></span>
-<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>    ef_test <span class="ot">&lt;-</span> <span class="fu">ef.gof</span>(y, pred_probs, <span class="at">G =</span> G)</span>
-<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>    <span class="cf">if</span> (ef_test<span class="sc">$</span>p_value <span class="sc">&lt;</span> <span class="fl">0.05</span>) rejections_ef <span class="ot">&lt;-</span> rejections_ef <span class="sc">+</span> <span class="dv">1</span></span>
-<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>    </span>
-<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>    <span class="co"># Hosmer-Lemeshow test (if available)</span></span>
-<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">requireNamespace</span>(<span class="st">&quot;ResourceSelection&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
-<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>      hl_test <span class="ot">&lt;-</span> ResourceSelection<span class="sc">::</span><span class="fu">hoslem.test</span>(y, pred_probs, <span class="at">g =</span> G)</span>
-<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>      <span class="cf">if</span> (hl_test<span class="sc">$</span>p.value <span class="sc">&lt;</span> <span class="fl">0.05</span>) rejections_hl <span class="ot">&lt;-</span> rejections_hl <span class="sc">+</span> <span class="dv">1</span></span>
-<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>    }</span>
-<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a>  }</span>
-<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>  </span>
-<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a>  power_ef <span class="ot">&lt;-</span> rejections_ef <span class="sc">/</span> n_sims</span>
-<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a>  power_hl <span class="ot">&lt;-</span> <span class="cf">if</span> (<span class="fu">requireNamespace</span>(<span class="st">&quot;ResourceSelection&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
-<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a>    rejections_hl <span class="sc">/</span> n_sims</span>
-<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a>    <span class="cn">NA</span></span>
-<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a>  }</span>
-<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a>  </span>
-<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">power_ef =</span> power_ef, <span class="at">power_hl =</span> power_hl))</span>
-<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a>}</span>
-<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a></span>
-<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a><span class="co"># Calculate power for different sample sizes</span></span>
-<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a>sample_sizes <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">200</span>, <span class="dv">500</span>, <span class="dv">1000</span>)</span>
-<span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a>power_results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a>  <span class="at">n =</span> sample_sizes,</span>
-<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a>  <span class="at">EbrahimFarrington_Power =</span> <span class="fu">sapply</span>(sample_sizes, <span class="cf">function</span>(n) {</span>
-<span id="cb6-43"><a href="#cb6-43" tabindex="-1"></a>    <span class="fu">simulate_power</span>(n, <span class="at">beta_quad =</span> <span class="fl">0.15</span>, <span class="at">n_sims =</span> <span class="dv">50</span>)<span class="sc">$</span>power_ef</span>
-<span id="cb6-44"><a href="#cb6-44" tabindex="-1"></a>  })</span>
-<span id="cb6-45"><a href="#cb6-45" tabindex="-1"></a>)</span>
-<span id="cb6-46"><a href="#cb6-46" tabindex="-1"></a></span>
-<span id="cb6-47"><a href="#cb6-47" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">requireNamespace</span>(<span class="st">&quot;ResourceSelection&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
-<span id="cb6-48"><a href="#cb6-48" tabindex="-1"></a>  power_results<span class="sc">$</span>HosmerLemeshow_Power <span class="ot">&lt;-</span> <span class="fu">sapply</span>(sample_sizes, <span class="cf">function</span>(n) {</span>
-<span id="cb6-49"><a href="#cb6-49" tabindex="-1"></a>    <span class="fu">simulate_power</span>(n, <span class="at">beta_quad =</span> <span class="fl">0.15</span>, <span class="at">n_sims =</span> <span class="dv">50</span>)<span class="sc">$</span>power_hl</span>
-<span id="cb6-50"><a href="#cb6-50" tabindex="-1"></a>  })</span>
-<span id="cb6-51"><a href="#cb6-51" tabindex="-1"></a>}</span>
-<span id="cb6-52"><a href="#cb6-52" tabindex="-1"></a></span>
-<span id="cb6-53"><a href="#cb6-53" tabindex="-1"></a><span class="fu">print</span>(power_results)</span>
-<span id="cb6-54"><a href="#cb6-54" tabindex="-1"></a><span class="co">#&gt;      n EbrahimFarrington_Power HosmerLemeshow_Power</span></span>
-<span id="cb6-55"><a href="#cb6-55" tabindex="-1"></a><span class="co">#&gt; 1  200                    0.08                 0.12</span></span>
-<span id="cb6-56"><a href="#cb6-56" tabindex="-1"></a><span class="co">#&gt; 2  500                    0.20                 0.14</span></span>
-<span id="cb6-57"><a href="#cb6-57" tabindex="-1"></a><span class="co">#&gt; 3 1000                    0.26                 0.22</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># Function to simulate power under model misspecification</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>simulate_power <span class="ot">&lt;-</span> <span class="cf">function</span>(n, <span class="at">beta_quad =</span> <span class="fl">0.1</span>, <span class="at">n_sims =</span> <span class="dv">100</span>, <span class="at">G =</span> <span class="dv">10</span>) {</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  rejections_ef <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  rejections_hl <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  </span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_sims) {</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>    <span class="co"># Generate data with quadratic term (true model)</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">runif</span>(n, <span class="sc">-</span><span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>    linpred_true <span class="ot">&lt;-</span> <span class="dv">0</span> <span class="sc">+</span> x <span class="sc">+</span> beta_quad <span class="sc">*</span> x<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>    prob_true <span class="ot">&lt;-</span> <span class="fu">plogis</span>(linpred_true)</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>    y <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="dv">1</span>, prob_true)</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>    </span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>    <span class="co"># Fit misspecified linear model (omitting quadratic term)</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>    model_mis <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> x, <span class="at">family =</span> <span class="fu">binomial</span>())</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>    pred_probs <span class="ot">&lt;-</span> <span class="fu">fitted</span>(model_mis)</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>    </span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>    <span class="co"># Ebrahim-Farrington test</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>    ef_test <span class="ot">&lt;-</span> <span class="fu">ef.gof</span>(y, pred_probs, <span class="at">G =</span> G)</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>    <span class="cf">if</span> (ef_test<span class="sc">$</span>p_value <span class="sc">&lt;</span> <span class="fl">0.05</span>) rejections_ef <span class="ot">&lt;-</span> rejections_ef <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>    </span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>    <span class="co"># Hosmer-Lemeshow test (if available)</span></span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">requireNamespace</span>(<span class="st">&quot;ResourceSelection&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>      hl_test <span class="ot">&lt;-</span> ResourceSelection<span class="sc">::</span><span class="fu">hoslem.test</span>(y, pred_probs, <span class="at">g =</span> G)</span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>      <span class="cf">if</span> (hl_test<span class="sc">$</span>p.value <span class="sc">&lt;</span> <span class="fl">0.05</span>) rejections_hl <span class="ot">&lt;-</span> rejections_hl <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>    }</span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a>  }</span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a>  </span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>  power_ef <span class="ot">&lt;-</span> rejections_ef <span class="sc">/</span> n_sims</span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a>  power_hl <span class="ot">&lt;-</span> <span class="cf">if</span> (<span class="fu">requireNamespace</span>(<span class="st">&quot;ResourceSelection&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a>    rejections_hl <span class="sc">/</span> n_sims</span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a>    <span class="cn">NA</span></span>
+<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a>  }</span>
+<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a>  </span>
+<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">power_ef =</span> power_ef, <span class="at">power_hl =</span> power_hl))</span>
+<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a>}</span>
+<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a></span>
+<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a><span class="co"># Calculate power for different sample sizes</span></span>
+<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a>sample_sizes <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">200</span>, <span class="dv">500</span>, <span class="dv">1000</span>)</span>
+<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a>power_results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a>  <span class="at">n =</span> sample_sizes,</span>
+<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a>  <span class="at">EbrahimFarrington_Power =</span> <span class="fu">sapply</span>(sample_sizes, <span class="cf">function</span>(n) {</span>
+<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a>    <span class="fu">simulate_power</span>(n, <span class="at">beta_quad =</span> <span class="fl">0.15</span>, <span class="at">n_sims =</span> <span class="dv">50</span>)<span class="sc">$</span>power_ef</span>
+<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a>  })</span>
+<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a>)</span>
+<span id="cb8-46"><a href="#cb8-46" tabindex="-1"></a></span>
+<span id="cb8-47"><a href="#cb8-47" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">requireNamespace</span>(<span class="st">&quot;ResourceSelection&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb8-48"><a href="#cb8-48" tabindex="-1"></a>  power_results<span class="sc">$</span>HosmerLemeshow_Power <span class="ot">&lt;-</span> <span class="fu">sapply</span>(sample_sizes, <span class="cf">function</span>(n) {</span>
+<span id="cb8-49"><a href="#cb8-49" tabindex="-1"></a>    <span class="fu">simulate_power</span>(n, <span class="at">beta_quad =</span> <span class="fl">0.15</span>, <span class="at">n_sims =</span> <span class="dv">50</span>)<span class="sc">$</span>power_hl</span>
+<span id="cb8-50"><a href="#cb8-50" tabindex="-1"></a>  })</span>
+<span id="cb8-51"><a href="#cb8-51" tabindex="-1"></a>}</span>
+<span id="cb8-52"><a href="#cb8-52" tabindex="-1"></a></span>
+<span id="cb8-53"><a href="#cb8-53" tabindex="-1"></a><span class="fu">print</span>(power_results)</span>
+<span id="cb8-54"><a href="#cb8-54" tabindex="-1"></a><span class="co">#&gt;      n EbrahimFarrington_Power HosmerLemeshow_Power</span></span>
+<span id="cb8-55"><a href="#cb8-55" tabindex="-1"></a><span class="co">#&gt; 1  200                    0.06                 0.12</span></span>
+<span id="cb8-56"><a href="#cb8-56" tabindex="-1"></a><span class="co">#&gt; 2  500                    0.14                 0.14</span></span>
+<span id="cb8-57"><a href="#cb8-57" tabindex="-1"></a><span class="co">#&gt; 3 1000                    0.20                 0.22</span></span></code></pre></div>
 </div>
 <div id="handling-grouped-data-original-farrington-test" class="section level2">
 <h2>Handling Grouped Data (Original Farrington Test)</h2>
 <p>For datasets with grouped observations (multiple trials per covariate
 pattern), you can use the original Farrington test:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Simulate grouped data</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">456</span>)</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>n_groups <span class="ot">&lt;-</span> <span class="dv">30</span></span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>m_trials <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">5</span><span class="sc">:</span><span class="dv">20</span>, n_groups, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>x_grouped <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n_groups)</span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>prob_grouped <span class="ot">&lt;-</span> <span class="fu">plogis</span>(<span class="fl">0.2</span> <span class="sc">+</span> <span class="fl">0.8</span> <span class="sc">*</span> x_grouped)</span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>y_grouped <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n_groups, m_trials, prob_grouped)</span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a></span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co"># Create data frame and fit model</span></span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>data_grouped <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  <span class="at">successes =</span> y_grouped,</span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>  <span class="at">trials =</span> m_trials,</span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>  <span class="at">x =</span> x_grouped</span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>)</span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a></span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>model_grouped <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>  <span class="fu">cbind</span>(successes, trials <span class="sc">-</span> successes) <span class="sc">~</span> x,</span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>  <span class="at">data =</span> data_grouped,</span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>()</span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>)</span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a></span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>predicted_probs_grouped <span class="ot">&lt;-</span> <span class="fu">fitted</span>(model_grouped)</span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a></span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co"># Original Farrington test for grouped data</span></span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>result_grouped <span class="ot">&lt;-</span> <span class="fu">ef.gof</span>(</span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>  y_grouped,</span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>  predicted_probs_grouped,</span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a>  <span class="at">model =</span> model_grouped,</span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>  <span class="at">m =</span> m_trials,</span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>  <span class="at">G =</span> <span class="cn">NULL</span>  <span class="co"># No automatic grouping for original test</span></span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a>)</span>
-<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a></span>
-<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="fu">print</span>(result_grouped)</span>
-<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt;                  Test Test_Statistic   p_value</span></span>
-<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt; 1 Farrington-Original      -1.476122 0.9300444</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Simulate grouped data</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">456</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>n_groups <span class="ot">&lt;-</span> <span class="dv">30</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>m_trials <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">5</span><span class="sc">:</span><span class="dv">20</span>, n_groups, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>x_grouped <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n_groups)</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>prob_grouped <span class="ot">&lt;-</span> <span class="fu">plogis</span>(<span class="fl">0.2</span> <span class="sc">+</span> <span class="fl">0.8</span> <span class="sc">*</span> x_grouped)</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>y_grouped <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n_groups, m_trials, prob_grouped)</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co"># Create data frame and fit model</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>data_grouped <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>  <span class="at">successes =</span> y_grouped,</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>  <span class="at">trials =</span> m_trials,</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  <span class="at">x =</span> x_grouped</span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>)</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>model_grouped <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>  <span class="fu">cbind</span>(successes, trials <span class="sc">-</span> successes) <span class="sc">~</span> x,</span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>  <span class="at">data =</span> data_grouped,</span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>()</span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>)</span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a></span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>predicted_probs_grouped <span class="ot">&lt;-</span> <span class="fu">fitted</span>(model_grouped)</span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a></span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a><span class="co"># Original Farrington test for grouped data</span></span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a>result_grouped <span class="ot">&lt;-</span> <span class="fu">ef.gof</span>(</span>
+<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a>  y_grouped,</span>
+<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a>  predicted_probs_grouped,</span>
+<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a>  <span class="at">model =</span> model_grouped,</span>
+<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a>  <span class="at">m =</span> m_trials,</span>
+<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a>  <span class="at">G =</span> <span class="cn">NULL</span>  <span class="co"># No automatic grouping for original test</span></span>
+<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a>)</span>
+<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a></span>
+<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a><span class="fu">print</span>(result_grouped)</span>
+<span id="cb9-34"><a href="#cb9-34" tabindex="-1"></a><span class="co">#&gt;                  Test Test_Statistic   p_value</span></span>
+<span id="cb9-35"><a href="#cb9-35" tabindex="-1"></a><span class="co">#&gt; 1 Farrington-Original      -1.476122 0.9300444</span></span></code></pre></div>
 </div>
 <div id="practical-guidelines" class="section level2">
 <h2>Practical Guidelines</h2>
@@ -639,7 +801,7 @@ models needs further study</li>
 Generalized Linear Models to Sparse Data. <em>Journal of the Royal
 Statistical Society. Series B (Methodological)</em>, 58(2),
 349-360.</p></li>
-<li><p>Ebrahim, Khaled Ebrahim (2024). Goodness-of-Fits Tests and
+<li><p>Ebrahim, Khaled Ebrahim (2025). Goodness-of-Fits Tests and
 Calibration Machine Learning Algorithms for Logistic Regression Model
 with Sparse Data. <em>Master’s Thesis</em>, Alexandria
 University.</p></li>

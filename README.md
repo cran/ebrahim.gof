@@ -6,12 +6,16 @@
 
 The **ebrahim.gof** package implements the Ebrahim-Farrington goodness-of-fit test for logistic regression models. This test is particularly effective for binary data and sparse datasets, providing an improved alternative to the traditional Hosmer-Lemeshow test.
 
+**New in version 2.0.0:** the package is now a full goodness-of-fit toolkit. Alongside the omnibus Ebrahim-Farrington (EF) test it adds the **Directed EF (DEF)** test (`def.gof()`), a **Cauchy-combination ensemble** (`def.ensemble.gof()`), and **`run.all.gof()`** — a one-call battery of ~19 goodness-of-fit tests (plus opt-in slow tests), each verified against the implementation used in the thesis simulation.
+
 ## Key Features
 
-- **Ebrahim-Farrington Test**: Simplified implementation for binary data with automatic grouping
+- **Ebrahim-Farrington Test** (`ef.gof()`): omnibus test for binary data with automatic grouping (chi-square or normal reference)
+- **Directed EF Test** (`def.gof()`): targets calibration-shape departures (poly2/poly3/stukel bases or their ensemble)
+- **Ensemble** (`def.ensemble.gof()`): combines the DEF bases via the Cauchy combination test
+- **One-shot battery** (`run.all.gof()`): runs ~19 GOF tests (plus opt-in slow ones) and returns a tidy data frame
 - **Original Farrington Test**: Full implementation for grouped data
 - **Robust Performance**: Particularly effective with sparse data and binary outcomes
-- **Easy to Use**: Simple function interface similar to other goodness-of-fit tests
 - **Well Documented**: Comprehensive documentation with examples
 
 ## Installation
@@ -29,13 +33,14 @@ devtools::install_github("ebrahimkhaled/ebrahim.gof")
 ```
 
 
-### From CRAN (Stable Version) (_NOT AVAILABLE YET_)
+### From CRAN (Stable Version)
 
-Another way to install the R-Libarary, but its _not availabe yet_.
+The released version is on CRAN (currently **1.0.0**):
 ```r
-# Will be available after CRAN submission
 install.packages("ebrahim.gof")
 ```
+Version **2.0.0** — this version, with the directed test, the ensemble, and the
+one-call battery — is available from GitHub now and is being submitted to CRAN.
 
 ## Quick Start
 
@@ -66,19 +71,130 @@ print(result)
 The main function that performs the goodness-of-fit test:
 
 ```r
-ef.gof(y, predicted_probs , G = 10, model = NULL, m = NULL)
+ef.gof(y, predicted_probs, G = 10, model = NULL, m = NULL,
+       method = c("chisq", "normal"))
 ```
 
 **Parameters:**
-- `y`: Binary response vector (0/1) or success counts for grouped data
+- `y`: a fitted binary-logistic `glm` (then `predicted_probs` is taken from it), or a binary response vector (0/1) / success counts for grouped data
 - `predicted_probs`: Vector of predicted probabilities from logistic model
 - `G`: Number of groups for binary data (default: 10)
-- `model`: Optional glm object (required for original Farrington  only, not for Ebrahim-Farrington test)
-- `m`: Optional vector of trial counts (for grouped data) (required for original Farrington  only, not for Ebrahim-Farrington test)
+- `method`: reference distribution for the grouped statistic. `"chisq"` (default, new in 2.0.0) refers T_EF to a chi-square with G-2 df; `"normal"` uses the standardized Z_EF (the behaviour of versions <= 1.0.0)
+- `model`: Optional glm object (required for the original Farrington test only)
+- `m`: Optional vector of trial counts (for grouped data; original Farrington only)
 
+> **Note (breaking change in 2.0.0):** `ef.gof()` now defaults to `method = "chisq"`. Use `method = "normal"` to reproduce p-values from version 1.0.0.
 
 **Returns:**
 A data frame with test name, test statistic, and p-value.
+
+### `def.gof()` — Directed Ebrahim-Farrington test
+
+Concentrates power on calibration-curve shape directions by projecting the
+grouped residuals onto a small smooth basis.
+
+```r
+def.gof(object, predicted_probs = NULL, X = NULL, G = 10,
+        basis = c("poly3", "poly2", "stukel", "ensemble"),
+        method = c("satterthwaite", "imhof"))
+```
+
+- `object`: a fitted binary-logistic `glm`, or a 0/1 response vector `y` (then give `predicted_probs`, and `X` to get the exact calibration).
+- `basis`: `"poly3"` (default), `"poly2"`, `"stukel"`, or `"ensemble"` (runs all three and combines them via `def.ensemble.gof()`).
+- `method`: `"satterthwaite"` (default, no extra dependency) or `"imhof"` (exact, needs `CompQuadForm`).
+
+```r
+fit <- glm(y ~ x1 + x2, family = binomial())
+def.gof(fit)                      # default poly3 basis
+def.gof(fit, basis = "ensemble")  # combined Cauchy decision
+```
+
+### `def.ensemble.gof()` — combine the DEF bases
+
+Combines the three DEF basis tests (optionally the omnibus EF, or extra
+p-values) into one decision via the Cauchy combination test (CCT).
+
+```r
+def.ensemble.gof(fit)                # CCT of poly2 + poly3 + stukel
+def.ensemble.gof(fit, add_ef = TRUE) # add the omnibus EF
+```
+
+### `run.all.gof()` — the whole battery in one call
+
+Runs a large battery of goodness-of-fit tests and returns one tidy data frame
+(one row per test). A failing test never aborts the run.
+
+```r
+fit <- glm(low ~ age + lwt + factor(race), data = MASS::birthwt, family = binomial())
+run.all.gof(fit)                       # the default (fast) battery + ensemble rows
+run.all.gof(fit, include_slow = TRUE)  # also the opt-in slow tests
+run.all.gof(fit, tests = c("EF", "DEF.poly3", "HL"))   # a chosen subset
+run.all.gof(y, fitted(fit))            # prediction-only tests (no model)
+```
+
+Default battery (19 rows): Pearson, Deviance, Osius-Rojek, Copas-RSS,
+Information-Matrix, Hosmer-Lemeshow (deciles and equal-width), Pigeon-Heyse, EF,
+EF-normal, the three DEF bases, Stukel, Tsiatis, Xie, Pulkstenis-Robinson, and
+the two Cauchy-combination ensemble rows. With `include_slow = TRUE` it also runs
+le Cessie-van Houwelingen, the GAM-based tests (HL-GAM, PR-GAM, Xie-GAM; need
+`mgcv`), Stute-Zhu, eHL, BAGofT, and the Lai & Liu standardized-power HL test.
+Every test reproduces the implementation used in the original thesis simulation.
+
+## Power and size: the partition-based family
+
+Most goodness-of-fit tests for logistic regression are **partition-based**: they
+split the data into groups — by the fitted probability, by covariate-space
+clusters, or by categorical patterns — and compare observed with expected event
+counts in each group. This is the family that `ef.gof()`, `def.gof()`, and
+`def.ensemble.gof()` belong to. In a Monte Carlo study (n = 500, 1000 replications,
+α = 0.05) the partition tests compare as follows:
+
+| Test | Grouping | Size (null) | Power: quadratic | Power: wrong link |
+|---|---|:---:|:---:|:---:|
+| Hosmer–Lemeshow (decile) | fitted prob | 0.060 | 0.588 | 0.179 |
+| Hosmer–Lemeshow (equal-width) | fitted prob | 0.053 | 0.332 | 0.244 |
+| Pigeon–Heyse | fitted prob | 0.035 | 0.535 | 0.133 |
+| EF (omnibus) | fitted prob | 0.058 | 0.480 | 0.218 |
+| Tsiatis | covariate clusters | 0.056 | 0.574 | 0.162 |
+| Xie | covariate clusters | 0.042 | 0.557 | 0.147 |
+| DEF (poly3) | fitted prob + shape basis | 0.060 | 0.709 | 0.404 |
+| **DEF (ensemble, vote)** | fitted prob + 3 bases | **0.066** | **0.767** | **0.468** |
+
+Across the family, **DEF and its vote ensemble are the most powerful while keeping
+the size near the nominal 0.05** — they are not liberal — and they roughly double
+the power of Hosmer–Lemeshow, Tsiatis, and Xie on the wrong-link misfit.
+
+![Size and power across partition-based GOF tests](vignettes/power_size_def.png)
+
+### Pros and cons of partition-based tests
+
+**Pros**
+- Intuitive — compare observed vs expected event counts within groups.
+- Work for **sparse data and continuous covariates**, where the classical Pearson
+  and deviance chi-square tests break down (those need replicated covariate
+  patterns).
+- Widely used and understood (Hosmer–Lemeshow is the de-facto standard).
+- Flexible — group by the fitted probability (HL, EF, Pigeon–Heyse, DEF) or by the
+  covariate space (Tsiatis, Xie) to target different kinds of misfit.
+
+**Cons**
+- The result depends on the **grouping choice** — the number of groups `G` and the
+  grouping rule. Hosmer–Lemeshow in particular is known to give different answers
+  for different `G` and across software.
+- **Limited power for some departures** — omnibus partition tests (HL) spread their
+  few degrees of freedom thinly; fitted-probability grouping can miss misfit that
+  cancels along the predicted probability; covariate-clustering tests can miss
+  smooth link departures.
+- The chi-square reference is **asymptotic** and needs adequate group sizes.
+
+DEF is built to fix the power cons **without** giving up size control: it keeps the
+intuitive fitted-probability grouping but *directs* the test at calibration-curve
+shapes, and the ensemble removes the basis choice by combining those directions —
+which is why it tops the table above while staying at the nominal size.
+
+*Setup: covariate `x ~ Uniform(-3, 3)`, models fitted as `glm(y ~ x)`; all tests
+computed in one call with the package's own `run.all.gof()`. The dashed red line
+marks the nominal 0.05 size.*
 
 ## Examples
 
@@ -100,11 +216,12 @@ y <- rbinom(n, 1, prob)
 model <- glm(y ~ x1 + x2, family = binomial())
 predicted_probs <- fitted(model)
 
-# Test goodness of fit
+# Test goodness of fit (chi-square reference by default in 2.0.0;
+# use method = "normal" for the version 1.0.0 p-value)
 result <- ef.gof(y, predicted_probs, G = 10)
 print(result)
-#>              Test Test_Statistic   p_value
-#> 1 Ebrahim-Farrington     -0.8944    0.8143
+#>                 Test Test_Statistic p_value
+#> 1 Ebrahim-Farrington         1.3731   0.096
 ```
 
 ### Example 2: Compare Different Group Numbers
@@ -178,6 +295,46 @@ power_results <- data.frame(
 print(power_results)
 ```
 
+### Example 5: Run the whole battery at once (`run.all.gof`)
+
+```r
+library(ebrahim.gof)
+
+# a model on the classic low-birth-weight data
+fit <- glm(low ~ age + lwt + factor(race) + smoke,
+           data = MASS::birthwt, family = binomial())
+
+# every test in one tidy data frame (one row per test)
+run.all.gof(fit)
+
+# also run the opt-in slow tests (le Cessie, GAM-based, Stute-Zhu, eHL, BAGofT,
+# Lai-Liu); set the bootstrap reps via control
+run.all.gof(fit, include_slow = TRUE,
+            control = list("Stute-Zhu" = list(B = 200)))
+
+# or just a chosen subset
+run.all.gof(fit, tests = c("EF", "DEF.poly3", "Tsiatis", "HL"))
+```
+
+### Example 6: Directed test and the ensemble (`def.gof`, `def.ensemble.gof`)
+
+```r
+set.seed(1)
+n <- 800
+x <- runif(n, -3, 3)
+y <- rbinom(n, 1, 1 - exp(-exp(0.6 * x)))   # true link is complementary log-log
+fit <- glm(y ~ x, family = binomial())       # fitted as logit (misspecified)
+
+# the directed test with different shape bases
+def.gof(fit, basis = "poly2")
+def.gof(fit, basis = "stukel")
+
+# the recommended default: combine the three bases with the Cauchy combination
+# test (no basis to choose, valid size)
+def.ensemble.gof(fit)
+def.ensemble.gof(fit, add_ef = TRUE)   # also fold in the omnibus EF
+```
+
 ## Methodology
 
 The Ebrahim-Farrington test is based on Farrington's (1996) theoretical framework but simplified for practical implementation with binary data. The test uses a modified Pearson chi-square statistic:
@@ -191,7 +348,12 @@ Z_EF = (T_EF - (G - 2)) / sqrt(2(G - 2))
 Where:
 - `T_EF` is the modified Pearson chi-square statistic
 - `G` is the number of groups
-- The test statistic follows a standard normal distribution under H₀
+- `Z_EF` follows a standard normal distribution under H₀
+
+As of **version 2.0.0**, `ef.gof()` by default refers `T_EF` directly to a
+chi-square distribution with `G - 2` degrees of freedom (`method = "chisq"`),
+which is a more accurate small-sample reference; the standardized-normal form
+`Z_EF` above is still available via `method = "normal"`.
 
 ## Advantages over Hosmer-Lemeshow Test
 
@@ -203,7 +365,7 @@ Where:
 Simulation results consistently demonstrate that the Ebrahim-Farrington test outperforms the Hosmer-Lemeshow test, even when the model misspecification is minimal—such as with a missing interaction or omitted quadratic term—when using **G = 10** groups (Ebrahim, 2025).
 ![Power_Comparison_All_Scenarios_Combined.png](vignettes/Power_Comparison_All_Scenarios_Combined.png)
 
-## Assympotitically Following the Standard Normal Distn
+## Asymptotically Following the Standard Normal Distribution
 The following two figures illustrate that, under the null hypothesis, the Ebrahim-Farrington test statistic is asymptotically standard normal for both single-predictor and multiple-predictor logistic regression models. This property holds even in sparse data settings, confirming the theoretical foundation of the test and supporting its use for model assessment. (see (Ebrahim,2025))
 
 - **Figure 1:** Empirical cumulative distribution function (CDF) of the Ebrahim-Farrington test statistic under the null for a single predictor, compared to the standard normal CDF.
@@ -228,7 +390,7 @@ If you use this package in your research, please cite:
 
 ```
 Ebrahim, K. E. (2025). ebrahim.gof: Ebrahim-Farrington Goodness-of-Fit Test 
-for Logistic Regression. R package version 1.0.0. 
+for Logistic Regression. R package version 2.0.0. 
 https://github.com/ebrahimkhaled/ebrahim.gof
 ```
 

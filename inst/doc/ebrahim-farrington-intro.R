@@ -65,6 +65,18 @@ if (requireNamespace("ResourceSelection", quietly = TRUE)) {
 }
 
 ## -----------------------------------------------------------------------------
+# Directed Ebrahim-Farrington test (takes the fitted model)
+def.gof(model)                       # default poly3 basis
+def.gof(model, basis = "ensemble")   # combine all three bases (Cauchy)
+
+# Ensemble of the three DEF bases
+def.ensemble.gof(model)
+def.ensemble.gof(model, add_ef = TRUE)   # add the omnibus EF
+
+## -----------------------------------------------------------------------------
+run.all.gof(model)
+
+## -----------------------------------------------------------------------------
 # Function to simulate power under model misspecification
 simulate_power <- function(n, beta_quad = 0.1, n_sims = 100, G = 10) {
   rejections_ef <- 0
