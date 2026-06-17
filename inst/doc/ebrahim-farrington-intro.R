@@ -74,7 +74,7 @@ def.ensemble.gof(model)
 def.ensemble.gof(model, add_ef = TRUE)   # add the omnibus EF
 
 ## -----------------------------------------------------------------------------
-run.all.gof(model)
+run.all.gof(model, include_slow = FALSE)
 
 ## -----------------------------------------------------------------------------
 # Function to simulate power under model misspecification

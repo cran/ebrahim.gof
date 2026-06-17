@@ -12,7 +12,7 @@
 
 <meta name="author" content="Ebrahim Khaled Ebrahim" />
 
-<meta name="date" content="2026-06-11" />
+<meta name="date" content="2026-06-17" />
 
 <title>Introduction to the Ebrahim-Farrington Goodness-of-Fit Test</title>
 
@@ -342,7 +342,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore">Introduction to the Ebrahim-Farrington
 Goodness-of-Fit Test</h1>
 <h4 class="author">Ebrahim Khaled Ebrahim</h4>
-<h4 class="date">2026-06-11</h4>
+<h4 class="date">2026-06-17</h4>
 
 
 
@@ -489,48 +489,58 @@ once.</p>
 <span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt;           Test Combiner            Components k   p_value</span></span>
 <span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt; 1 DEF ensemble      cct poly2+poly3+stukel+EF 4 0.9070102</span></span></code></pre></div>
 <p><code>run.all.gof()</code> returns one tidy data frame, one row per
-test:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">run.all.gof</span>(model)</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co">#&gt;                      Test          Family     Statistic         df    p_value</span></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; 1                 Pearson          Global 500.189779915 498.000000 0.46398355</span></span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; 2                Deviance          Global 548.361194487 498.000000 0.05868791</span></span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; 3             Osius-Rojek    Standardized   0.124150785         NA 0.90119589</span></span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; 4               Copas-RSS    Standardized   0.001485027   1.000000 0.99881512</span></span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; 5      Information-Matrix          Global   0.017967854   2.000000 0.99105631</span></span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; 6                      HL       Partition   2.855296455   8.000000 0.94310750</span></span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; 7           HL-equalwidth       Partition   4.860031216   8.000000 0.77242612</span></span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; 8            Pigeon-Heyse       Partition   2.877438508   9.000000 0.96895634</span></span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; 9                      EF    Standardized  -1.250566694   8.000000 0.93449972</span></span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt; 10              EF-normal    Standardized  -1.250566694   8.000000 0.89445370</span></span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt; 11              DEF.poly2        Directed   0.061762126   1.076818 0.82265331</span></span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; 12              DEF.poly3        Directed   0.133355497   2.058835 0.93949233</span></span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; 13             DEF.stukel        Directed   0.319113754   2.002282 0.83134362</span></span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; 14                 Stukel        Directed   0.030567470   2.000000 0.98483247</span></span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; 15                Tsiatis Covariate-space   5.778041795   9.000000 0.76191087</span></span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt; 16                    Xie Covariate-space   8.311608210   8.500000 0.45352565</span></span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt; 17    Pulkstenis-Robinson Covariate-space            NA         NA         NA</span></span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt; 18    Ensemble.Vote(3DEF)        Ensemble            NA         NA 0.89211275</span></span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; 19 Ensemble.Univ(3DEF+EF)        Ensemble            NA         NA 0.90701023</span></span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt;                         Note</span></span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; 1                           </span></span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt; 2                           </span></span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; 3                           </span></span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; 4                           </span></span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; 5                           </span></span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt; 6                           </span></span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt; 7                           </span></span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt; 8                           </span></span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt; 9                           </span></span>
-<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt; 10 normal reference (thesis)</span></span>
-<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt; 11                          </span></span>
-<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt; 12                          </span></span>
-<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt; 13                          </span></span>
-<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt; 14                          </span></span>
-<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt; 15                          </span></span>
-<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt; 16                          </span></span>
-<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt; 17  no categorical covariate</span></span>
-<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt; 18                       CCT</span></span>
-<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#&gt; 19                       CCT</span></span></code></pre></div>
+test (here the fast battery; the slow tests are shown below):</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">run.all.gof</span>(model, <span class="at">include_slow =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; Goodness-of-fit battery: 21 tests</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; ==============================================================================</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt;  Test                   Family          Statistic df   p_value signif</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt;  Pearson                Global          500.2      498 0.4640        </span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt;  Deviance               Global          548.4      498 0.0587  .     </span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt;  Information-Matrix     Global          0.01797      2 0.9911        </span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt;  Osius-Rojek            Standardized    0.1242         0.9012        </span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt;  McCullagh              Standardized    0.04384        0.4825        </span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt;  Copas-RSS              Standardized    0.001485     1 0.9988        </span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt;  EF                     Standardized    -1.251       8 0.9345        </span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt;  EF-normal              Standardized    -1.251       8 0.8945        </span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt;  HL                     Partition       2.855        8 0.9431        </span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt;  HL-equalwidth          Partition        4.86        8 0.7724        </span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt;  Pigeon-Heyse           Partition       2.877        9 0.9690        </span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt;  F-test                 Partition        1.11        9 0.3536        </span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt;  Tsiatis                Covariate-space 5.778        9 0.7619        </span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt;  Xie                    Covariate-space 8.312      8.5 0.4535        </span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt;  Pulkstenis-Robinson    Covariate-space                -             </span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt;  DEF.poly2              Directed        0.06176   1.08 0.8227        </span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt;  DEF.poly3              Directed        0.1334    2.06 0.9395        </span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt;  DEF.stukel             Directed        0.3191       2 0.8313        </span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt;  Stukel                 Directed        0.03057      2 0.9848        </span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Vote(3DEF)    Ensemble                       0.8921        </span></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Univ(3DEF+EF) Ensemble                       0.9070        </span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt;  Note                                         </span></span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt;  normal reference (thesis)                    </span></span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt;  deviance residuals ~ groups (ANOVA F)        </span></span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a><span class="co">#&gt;  Not applicable: needs a categorical covariate</span></span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a><span class="co">#&gt;                                               </span></span>
+<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a><span class="co">#&gt;  Cauchy combination of the directed tests     </span></span>
+<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a><span class="co">#&gt;  Cauchy combination of the directed tests     </span></span>
+<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------------------------------</span></span>
+<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a><span class="co">#&gt; Signif.:  *** &lt;.001   ** &lt;.01   * &lt;.05   . &lt;.1     p &#39;-&#39; = not available</span></span>
+<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a><span class="co">#&gt; 1 test(s) not available - see the Note column for why.</span></span></code></pre></div>
 <p>Add <code>include_slow = TRUE</code> to also run the opt-in slow
 tests (le Cessie, the GAM-based tests, Stute-Zhu, eHL, BAGofT, and the
 Lai &amp; Liu standardized-power test), or pass
