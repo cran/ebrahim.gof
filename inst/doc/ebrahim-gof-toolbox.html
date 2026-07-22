@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>A goodness-of-fit and calibration toolbox for logistic regression</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">A goodness-of-fit and calibration toolbox
+for logistic regression</h1>
+
+
+
+<div id="why-a-toolbox" class="section level2">
+<h2>Why a toolbox</h2>
+<p>Before the inferences or predictions of a logistic regression model
+can be trusted, its <em>goodness of fit</em> has to be checked. Many
+tests exist for this, but in practice they are <strong>scattered across
+different packages with different interfaces</strong>, base R ships only
+the Hosmer–Lemeshow idea, and most of the classical tests <strong>lose
+power on sparse data</strong> — the common situation where continuous
+covariates give almost every observation its own covariate pattern.</p>
+<p><code>ebrahim.gof</code> addresses this in one place. It:</p>
+<ul>
+<li><strong>introduces the author’s own sparse-data tests</strong> — the
+omnibus Ebrahim–Farrington (EF) test, the <em>directed</em> EF /
+<strong>EDGE</strong> test that targets smooth calibration-shape
+departures, and a Cauchy-combination ensemble; and</li>
+<li><strong>aggregates a wide range of classical and modern
+tests</strong> (Hosmer–Lemeshow, McCullagh, Osius–Rojek, le Cessie–van
+Houwelingen, Stute–Zhu, the binary-adaptive <code>BAGofT</code> test,
+and the <code>givitiR</code> calibration test) behind <strong>one
+call</strong>, <code>run.all.gof()</code>, so they can be compared head
+to head. Each aggregated test is obtained from its own package and is
+credited to its authors; they are provided for comparison, not claimed
+as original here.</li>
+</ul>
+</div>
+<div id="the-example-data" class="section level2">
+<h2>The example data</h2>
+<p>The bundled <code>gof_demo</code> dataset was generated from a model
+whose true linear predictor is <strong>quadratic in age</strong>. If we
+fit a model that treats age <em>linearly</em>, it is therefore subtly
+misspecified through a smooth, low-dimensional calibration distortion —
+exactly the misfit a <em>directed</em> test is built to detect and an
+<em>omnibus</em> test tends to miss.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;gof_demo&quot;</span>, <span class="at">package =</span> <span class="st">&quot;ebrahim.gof&quot;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">str</span>(gof_demo)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co">#&gt; &#39;data.frame&#39;:    800 obs. of  5 variables:</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co">#&gt;  $ outcome  : int  1 0 0 0 0 0 0 0 0 1 ...</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co">#&gt;  $ age      : num  54.9 47.8 27 34.3 47.8 21.3 43.3 63.1 32.6 49 ...</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co">#&gt;  $ bmi      : num  32.3 29.2 22.8 26.2 23.4 19 34.6 33.3 27.6 21.3 ...</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co">#&gt;  $ sex      : int  1 0 1 0 0 1 0 0 1 0 ...</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="co">#&gt;  $ treatment: int  0 0 1 0 0 1 1 0 0 0 ...</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">glm</span>(outcome <span class="sc">~</span> age <span class="sc">+</span> bmi <span class="sc">+</span> sex <span class="sc">+</span> treatment,</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>           <span class="at">data =</span> gof_demo, <span class="at">family =</span> binomial)</span></code></pre></div>
+</div>
+<div id="one-call-the-whole-battery" class="section level2">
+<h2>One call: the whole battery</h2>
+<p><code>run.all.gof()</code> runs the battery and returns a tidy
+<code>gof_battery</code> table. Here we use the fast subset
+(<code>include_slow = FALSE</code>) and <code>install = &quot;no&quot;</code> so
+nothing is installed or resampled while the vignette builds; tests whose
+optional package is not present are simply skipped.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>battery <span class="ot">&lt;-</span> <span class="fu">run.all.gof</span>(fit, <span class="at">include_slow =</span> <span class="cn">FALSE</span>, <span class="at">install =</span> <span class="st">&quot;no&quot;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>battery</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt; Goodness-of-fit battery: 21 tests  (16 reject at 0.05)</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt; ========================================================</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt;  Test                        Statistic   df  p-value    </span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;  --- Global --------------------------------------------</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt;  Pearson                           760  795   0.8087    </span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt;  Deviance                        839.1  795   0.1352    </span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt;  Information-Matrix              26.39    5  7.5e-05 ***</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt;  --- Standardized --------------------------------------</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt;  Osius-Rojek                    -2.388        0.0169 *  </span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt;  McCullagh                      -2.725        0.9968    </span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt;  Copas-RSS                       3.352    1   0.0008 ***</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt;  EF                              1.988    8   0.0431 *  </span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt;  EF-normal [a]                   1.988    8   0.0234 *  </span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt;  --- Partition -----------------------------------------</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co">#&gt;  HL                              15.52    8   0.0499 *  </span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="co">#&gt;  HL-equalwidth                   22.11    7   0.0024 ** </span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="co">#&gt;  Pigeon-Heyse                    15.58    9   0.0761 .  </span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="co">#&gt;  F-test [b]                      2.088    9   0.0283 *  </span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="co">#&gt;  --- Covariate-space -----------------------------------</span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="co">#&gt;  Tsiatis                         63.53    9  2.8e-10 ***</span></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="co">#&gt;  Xie                              51.9    7  6.1e-09 ***</span></span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a><span class="co">#&gt;  Pulkstenis-Robinson [c]         7.282    4   0.1217    </span></span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a><span class="co">#&gt;  --- Directed ------------------------------------------</span></span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a><span class="co">#&gt;  DEF.poly2                       8.299 1.08   0.0036 ** </span></span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a><span class="co">#&gt;  DEF.poly3                        8.33 2.07   0.0150 *  </span></span>
+<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a><span class="co">#&gt;  DEF.stukel                        6.5 1.56   0.0118 *  </span></span>
+<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a><span class="co">#&gt;  Stukel                          14.24    2   0.0008 ***</span></span>
+<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a><span class="co">#&gt;  --- Ensemble ------------------------------------------</span></span>
+<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Vote(3DEF) [d]                      0.0070 ** </span></span>
+<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Univ(3DEF+EF) [d]                   0.0088 ** </span></span>
+<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a><span class="co">#&gt; --------------------------------------------------------</span></span>
+<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a><span class="co">#&gt;  Signif.:  *** &lt;.001   ** &lt;.01   * &lt;.05   . &lt;.1</span></span>
+<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a><span class="co">#&gt;  Notes:</span></span>
+<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a><span class="co">#&gt;    [a] normal reference (thesis)</span></span>
+<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a><span class="co">#&gt;    [b] deviance residuals ~ groups (ANOVA F)</span></span>
+<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a><span class="co">#&gt;    [c] split on categorical: sex, treatment</span></span>
+<span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a><span class="co">#&gt;    [d] Cauchy combination of the directed tests</span></span></code></pre></div>
+<p>Read the table by <em>family</em>. The <strong>global
+omnibus</strong> statistics (Pearson, deviance) spread their power over
+hundreds of covariate patterns and tend to <strong>miss</strong> this
+smooth misfit. The <strong>directed</strong> tests —
+<code>DEF.poly2</code>, <code>DEF.poly3</code> (EDGE),
+<code>DEF.stukel</code>, and Stukel’s score test — concentrate their few
+degrees of freedom on the calibration-curve shape and
+<strong>detect</strong> it, as do the EF test and the ensemble. That
+contrast is the whole point of a directed test.</p>
+</div>
+<div id="sparse-or-grouped-let-the-package-show-you-both" class="section level2">
+<h2>Sparse or grouped? Let the package show you both</h2>
+<p>Three of the battery’s tests are <em>pattern-sensitive</em>:
+<code>Pearson</code>, <code>Deviance</code>, and <code>McCullagh</code>
+have a reference distribution that depends on whether they are computed
+per observation (the “sparse” form) or per distinct <em>covariate
+pattern</em> (the “grouped” form). With all-continuous covariates, as in
+<code>gof_demo</code>, every observation is its own pattern (800
+patterns for 800 observations), so the two forms
+<strong>coincide</strong>; the package recognises this degenerate case
+and omits the redundant <code>(grouped)</code> rows, showing only the
+sparse form in the table above. (This is also the regime where the
+per-observation Pearson and deviance statistics lose their chi-squared
+reference entirely.) The paired <code>(grouped)</code> rows appear only
+when covariate patterns actually repeat — as they do next.</p>
+<p>The bundled <code>gof_demo_grouped</code> dataset makes the
+distinction real. It uses the <em>same</em> data-generating process, but
+<code>age</code> is recorded in 10-year bins and <code>bmi</code> as
+integers, so the 800 observations share only 328 covariate patterns. The
+battery detects this automatically and the two forms now disagree — on
+this data the sparse deviance says “fine” (p about 0.17) while the
+grouped deviance rejects (p about 0.04), with the degrees of freedom
+dropping from 795 to 323:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;gof_demo_grouped&quot;</span>, <span class="at">package =</span> <span class="st">&quot;ebrahim.gof&quot;</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>fit_g <span class="ot">&lt;-</span> <span class="fu">glm</span>(outcome <span class="sc">~</span> age <span class="sc">+</span> bmi <span class="sc">+</span> sex <span class="sc">+</span> treatment,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>             <span class="at">data =</span> gof_demo_grouped, <span class="at">family =</span> binomial)</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="fu">run.all.gof</span>(fit_g, <span class="at">include_slow =</span> <span class="cn">FALSE</span>, <span class="at">install =</span> <span class="st">&quot;no&quot;</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt; Goodness-of-fit battery: 24 tests  (7 reject at 0.05)</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; ========================================================</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;  Test                        Statistic   df  p-value    </span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;  --- Global --------------------------------------------</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;  Pearson                         769.2  795   0.7377    </span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt;  Pearson (grouped) [a]           346.8  323   0.1738    </span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt;  Deviance                        833.7  795   0.1655    </span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt;  Deviance (grouped) [a]          369.5  323   0.0380 *  </span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt;  Information-Matrix              20.94    5   0.0008 ***</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;  --- Standardized --------------------------------------</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt;  Osius-Rojek [a]                0.9196        0.3578    </span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt;  McCullagh                      -1.864        0.9689    </span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt;  McCullagh (grouped) [a]         0.847        0.1985    </span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt;  Copas-RSS                       2.189    1   0.0286 *  </span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt;  EF                              1.038    8   0.1445    </span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt;  EF-normal [b]                   1.038    8   0.1496    </span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt;  --- Partition -----------------------------------------</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt;  HL                              11.79    8   0.1610    </span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt;  HL-equalwidth                   10.33    7   0.1706    </span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt;  Pigeon-Heyse                    11.57    9   0.2387    </span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt;  F-test [c]                      1.535    9   0.1312    </span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt;  --- Covariate-space -----------------------------------</span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt;  Tsiatis                         52.87    8  1.1e-08 ***</span></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt;  Xie                             48.98    7  2.3e-08 ***</span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt;  Pulkstenis-Robinson [d]         84.93   43   0.0001 ***</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt;  --- Directed ------------------------------------------</span></span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt;  DEF.poly2                       3.406 1.08   0.0645 .  </span></span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt;  DEF.poly3                       4.657 2.08   0.0974 .  </span></span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt;  DEF.stukel                        3.3 1.61   0.0936 .  </span></span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt;  Stukel                          6.057    2   0.0484 *  </span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt;  --- Ensemble ------------------------------------------</span></span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Vote(3DEF) [e]                      0.0824 .  </span></span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Univ(3DEF+EF) [e]                   0.0924 .  </span></span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt; --------------------------------------------------------</span></span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt;  Signif.:  *** &lt;.001   ** &lt;.01   * &lt;.05   . &lt;.1</span></span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt;  Notes:</span></span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt;    [a] grouped to 328 covariate patterns</span></span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt;    [b] normal reference (thesis)</span></span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co">#&gt;    [c] deviance residuals ~ groups (ANOVA F)</span></span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a><span class="co">#&gt;    [d] split on categorical: age, sex, treatment</span></span>
+<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a><span class="co">#&gt;    [e] Cauchy combination of the directed tests</span></span></code></pre></div>
+<p>Same model formula, same test family, opposite verdicts — so handling
+the grouping wrong silently changes conclusions. The package’s answer is
+to never make that choice for you invisibly: both forms are printed side
+by side whenever they differ, and in truly sparse data (where no grouped
+“correction” can rescue Pearson or the deviance) the partition and
+directed families below are the tools that remain valid.</p>
+</div>
+<div id="the-directed-tests-on-their-own" class="section level2">
+<h2>The directed tests on their own</h2>
+<p>Each test is also callable directly. The EDGE test projects the
+grouped standardized residuals onto a small basis of smooth calibration
+shapes:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">edge.gof</span>(fit)                 <span class="co"># directed EDGE test (poly3 basis)</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt;   Test Basis Test_Statistic       df        Method    p_value</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; 1 EDGE poly3       8.329512 2.072814 satterthwaite 0.01496412</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="fu">def.gof</span>(fit, <span class="at">basis =</span> <span class="st">&quot;poly2&quot;</span>) <span class="co"># a lower-order directed basis</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt;                          Test Basis Test_Statistic       df        Method</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; 1 Directed Ebrahim-Farrington poly2        8.29914 1.076512 satterthwaite</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt;       p_value</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; 1 0.003576024</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="fu">ef.gof</span>(fit)                   <span class="co"># the omnibus EF test</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;                 Test Test_Statistic    p_value</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 1 Ebrahim-Farrington       1.987687 0.04309049</span></span></code></pre></div>
+<p>The Cauchy-combination ensemble pools the directed bases into a
+single p-value:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">def.ensemble.gof</span>(fit)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt;           Test Combiner         Components k     p_value</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; 1 DEF ensemble      cct poly2+poly3+stukel 3 0.006959379</span></span></code></pre></div>
+</div>
+<div id="going-further" class="section level2">
+<h2>Going further</h2>
+<ul>
+<li><strong>The full battery.</strong> Set
+<code>include_slow = TRUE</code> to add the resampling/refit-based tests
+(le Cessie–van Houwelingen, Stute–Zhu, <code>BAGofT</code>, GAM-smooth
+tests) and <code>calibration_plot = TRUE</code> for the
+<code>givitiR</code> calibration test and belt. These need their
+respective optional packages; <code>gof_install_suggests()</code>
+installs them.</li>
+<li><strong>Speed.</strong> The EDGE test is calibrated in closed form
+(no bootstrap, no refit), so it costs a few milliseconds even at large
+<code>n</code>. An optional GPU backend for the heavier
+O(n<sup>2)/O(n</sup>3) aggregated tests (le Cessie, projection) is
+available in the package’s replication materials.</li>
+<li><strong>Choosing a test.</strong> For the structured misfit that
+dominates practice — a wrong link or an omitted smooth term — prefer a
+directed test (EDGE) over an omnibus one; keep an omnibus test in
+reserve for rough, high-frequency departures.</li>
+</ul>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p>Farrington CP (1996). “On Assessing Goodness of Fit of Generalized
+Linear Models to Sparse Data.” <em>Journal of the Royal Statistical
+Society B</em>, <strong>58</strong>(2), 349–360.</p>
+<p>Hosmer DW, Lemeshow S (1980). “Goodness of Fit Tests for the Multiple
+Logistic Regression Model.” <em>Communications in Statistics – Theory
+and Methods</em>, <strong>9</strong>(10), 1043–1069.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

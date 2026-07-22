@@ -1,3 +1,109 @@
+# ebrahim.gof 2.4.0
+
+## Print method
+
+* `print.gof_battery()` redesigned for readability and width-robustness: tests are
+  grouped under `--- Family ---` separators, per-test notes moved to compact `[a]`
+  footnotes (so the table no longer wraps on narrow terminals), numbers are
+  right-aligned, and the header reports how many tests reject at 0.05.
+
+## Battery behaviour
+
+* `run.all.gof()` now omits a `"(grouped)"` row (Pearson / deviance / McCullagh)
+  when it is identical to the sparse form -- i.e., when no covariate pattern
+  repeats -- so fully sparse data no longer shows duplicate rows. The grouped row
+  is still reported when patterns repeat and the two forms differ.
+* The `BAGofT` control entry now forwards the test's key tuning parameters:
+  `nsim`, `nsplits`, `ne`, and the random-forest partitioner's `Kmax` (maximum
+  number of adaptive partition cells), `ntree`, `nmin`, `mtry`, `maxnodes`.
+
+
+## New features
+
+* `run.all.gof()` gains `parallel = FALSE` and `ncores = NULL` arguments. With
+  `parallel = TRUE`, the resampling loops of the two slow bootstrap tests --
+  **Stute-Zhu** (parametric bootstrap) and **Lai-Liu-HL** (stratified
+  resampling) -- run on a local PSOCK cluster via base
+  `parallel::parLapply()`, which works on every platform including Windows.
+  `ncores` defaults to `max(1, parallel::detectCores() - 1)`. Everything else
+  in the battery is untouched, and the sequential default reproduces previous
+  versions exactly.
+* Parallel runs are reproducible: the workers' RNG streams are initialized
+  with `parallel::clusterSetRNGStream()`, seeded deterministically from the
+  session RNG, so two runs from the same `set.seed()` state (and the same
+  `ncores`) give identical bootstrap p-values. The parallel L'Ecuyer-CMRG
+  streams necessarily differ from the serial stream, so `parallel = TRUE`
+  and `parallel = FALSE` results differ within Monte-Carlo error at the same
+  seed (standard behaviour, documented in `?run.all.gof`).
+* Base `parallel` added to `Imports` (no new external dependencies).
+* `edges.gof()` — a brand-name alias for `def.ensemble.gof()`, matching the
+  ensemble's published name **EDGES** (the Cauchy-combination ensemble of the
+  EDGE directed bases). It takes the same arguments and returns the same value;
+  `def.ensemble.gof()` is retained unchanged for backward compatibility.
+
+## New data
+
+* New bundled dataset **`gof_demo_grouped`** — a companion to `gof_demo` built
+  from the same data-generating process, but with `age` recorded in 10-year
+  bins and `bmi` as integers *before* the outcome is generated, so the 800
+  observations share only 328 covariate patterns. It demonstrates the
+  sparse-versus-grouped distinction that `run.all.gof()` reports side by side:
+  on this data the per-observation ("sparse") deviance and the
+  covariate-pattern ("grouped") deviance reach *opposite* verdicts at the 5%
+  level, while on the all-continuous `gof_demo` the two forms coincide (the
+  degenerate case). Generated reproducibly in `data-raw/make_gof_demo.R`.
+* New vignette subsection "Sparse or grouped? Let the package show you both"
+  walking through the demo.
+
+# ebrahim.gof 2.3.0
+
+## Documentation and data (toolbox reframe)
+
+* The package is reframed as a **goodness-of-fit and calibration toolbox** for
+  logistic regression (Title/Description/README updated), foregrounding the
+  one-call `run.all.gof()` battery and the author's own sparse-data tests
+  (EF / DEF / EDGE / ensemble), with the aggregated classical and modern tests
+  credited to their authors.
+* New bundled dataset **`gof_demo`** — a small synthetic dataset with a
+  documented, reproducible smooth (quadratic-in-age) misfit, for illustrating
+  the battery (see `data-raw/make_gof_demo.R`).
+* New vignette **"A goodness-of-fit and calibration toolbox for logistic
+  regression"** walking through the battery on `gof_demo`.
+* Added a package-level help page (`?ebrahim.gof`).
+
+# ebrahim.gof 2.2.0
+
+## New features
+
+* `edge.gof()` — the new primary interface to the directed test, matching the
+  method's published name **EDGE** (Ebrahim Directed Goodness-of-fit
+  Evaluation). It computes exactly the same statistic as `def.gof()` and
+  returns `Test = "EDGE"` in the result row. `def.gof()` is retained,
+  unchanged, as a fully supported legacy name — existing code keeps working.
+* Includes the grouped-form additions developed since 2.1.0 (see 2.1.1 notes
+  below): grouped (covariate-pattern) forms of Pearson / Deviance / McCullagh
+  reported alongside the sparse forms, and the Osius-Rojek test computed on
+  covariate patterns per its classical definition.
+
+# ebrahim.gof 2.1.1
+
+## New features
+
+* `gof_install_suggests()` - installs the optional ("Suggests") packages that
+  the slow tests in `run.all.gof()` rely on (`givitiR` + `callr` for GiViTI,
+  `mgcv` for the GAM tests, `BAGofT`, `ResourceSelection`). It only installs the
+  ones that are missing (anything already present is left untouched), and asks
+  for confirmation first (in interactive sessions); pass `ask = FALSE` to skip
+  the prompt in a setup script. With `update = TRUE` it also checks
+  `old.packages()` and offers to update any that are out of date.
+* `run.all.gof()` gains an `install` argument (`"ask"` by default). When a test
+  in the run needs an optional package that is not installed, an interactive
+  session offers to install it (with `"ask"`) or installs it silently (with
+  `"yes"`); `"no"` keeps the previous behaviour of just skipping the test with a
+  note. Per CRAN policy, a non-interactive session (scripts, `R CMD check`)
+  never installs anything, regardless of the setting -- the library is never
+  modified without the user's explicit consent.
+
 # ebrahim.gof 2.1.0
 
 ## New features
