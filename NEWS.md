@@ -1,3 +1,189 @@
+# ebrahim.gof 2.6.0
+
+## New features
+
+* `deepgof1()` -- DeepGOF-1, a pretrained goodness-of-fit test for binary logistic
+  regression whose statistic is a convolutional network. The network reads the fitted
+  model's *residual map* (a 6x6 grid of standardized residual sums over the ranks of the
+  two strongest covariates), so misfit is detected by its spatial pattern: an omitted
+  quadratic paints a stripe, an omitted interaction a saddle, a local departure a bump.
+
+  The network was trained once, offline, on simulated departures and ships frozen as
+  18,273 numbers. Nothing is trained when you call the function, and the p-value is the
+  rank of the observed score inside your own parametric bootstrap -- so the level is a
+  property of the calibration, not of what the network learned. A bootstrap refit that
+  fails is scored `+Inf`, counting against rejection.
+
+  Implemented in pure base R (the forward pass is a few small matrix multiplies), so the
+  package still needs no Python and no additional dependency. The shipped weights are
+  verified against the training framework in `tests/testthat/test-deepgof1.R`; agreement
+  is to 5e-11.
+
+  It is a small-sample instrument: on a published benchmark it outpowers every classical
+  partition test at every sample size, most clearly at n = 50 to 200, while tests that use
+  the whole covariate space rather than a two-covariate grid do better overall. The
+  training corpus, training code, benchmark harness and every per-replicate p-value behind
+  those numbers are archived separately from this package.
+
+# ebrahim.gof 2.5.0
+
+## New features
+
+* `legoft()` -- a pretrained goodness-of-fit test for binary logistic regression. It
+  combines eleven classical and directed statistics with weights that were fixed offline
+  and ship frozen, and calibrates the combination by a parametric bootstrap at the fitted
+  parameters. Nothing is retrained when you call it, so two analysts running it on the
+  same data obtain the same p-value.
+
+  On twelve held-out misspecification families the rule attained higher mean power than
+  each of the fourteen individual tests in the study, at n = 500 and n = 1000. It does
+  **not** dominate them family by family: against the two covariate-space directed tests
+  the advantage is in the mean rather than in per-family consistency, which is the
+  dilution a combination pays for having no catastrophic blind spot.
+
+  It does **not** beat an equal-weight Cauchy combination of the same eleven members
+  (Liu and Xie, 2020). The difference is +0.0045 at n = 500 (sign test p = 0.23) and
+  -0.0005 at n = 1000. Users who want the simpler rule lose nothing measurable; `legoft()`
+  reduces to it exactly at the boundary of its weight family, so it cannot do worse.
+
+* `shrink.gof()` -- goodness of fit for **penalized (ridge) logistic regression**. The
+  Hosmer--Lemeshow test is not valid when the coefficients are shrunk: penalization biases
+  the fitted probabilities, the grouped residuals acquire a non-centrality, and the usual
+  chi-squared reference is wrong. This removes the estimated non-centrality and refers the
+  corrected statistic to a bootstrap built from the debiased generator (Beran prepivoting),
+  on either the decile or the EDGE basis.
+
+  Note the scale: `lambda` is on the theory scale, `lambda = n * lambda_glmnet`. Passing a
+  \pkg{glmnet} lambda unchanged is the commonest way to misuse this function.
+
+  The implementation is vendored byte-identical from the source of Ebrahim (2026),
+  "Shrinkage invalidates the Hosmer--Lemeshow test", so the paper and the package compute
+  the same numbers. It depends only on base R and stats.
+
+* `legoft.localize()` -- reports which of two domains of evidence carries the misfit,
+  using closed testing, so the probability of implicating any collection of domains whose
+  pooled evidence is jointly exchangeable with the reference draws' is at most `alpha`.
+
+  The domains are defined by what the members can see rather than by taxonomy. `INDEX`
+  holds the seven statistics that read the linear predictor -- the grouping tests, which
+  stratify on fitted risk, and the directed tests, which examine bends in that same index.
+  `COV` holds the four that read directions orthogonal to it. Calibration and link
+  readings are pooled deliberately: they are **not separately identifiable**, because
+  fitted risk is a monotone transform of the index, so both read one axis.
+
+  A verdict locates the evidence. It does not name the repair: a departure of one kind
+  can move members assigned to the other domain, and an unimplicated domain is not
+  thereby certified correct.
+
+## Documentation
+
+* The help for `run.all.gof()` now describes each test individually. It previously named
+  around twenty-five tests in a single paragraph with a parenthetical each, which was
+  enough to tell you a test existed but not enough to decide whether to run it or what a
+  rejection from it meant. Entries are now grouped by the mechanism the test uses --
+  global and standardized, partition, directed, covariate-space, smoothing, resampling,
+  calibration, combinations -- and each says what the test computes, which departure it
+  is built to notice, and where it fails.
+
+  The failure modes are stated because they are the part users get wrong. Pigeon--Heyse is
+  conservative in sparse designs; Stukel's two-parameter form does not always hold its
+  nominal level; `HL-equalwidth` is frequently not computable when fitted risks are
+  concentrated in a narrow band; GiViTI's internal and external forms are not
+  interchangeable; and the chi-squared reference with `G - 2` degrees of freedom was
+  established by simulation rather than derived, so `G = 10` is a convention and worth
+  varying.
+
+* Ten classical tests were implemented but never cited. Pigeon--Heyse, Copas, White,
+  Orme, Kuss, Lai--Liu, Nattino (GiViTI), Zhang (BAGofT), Liu--Xie (Cauchy combination)
+  and Hosmer et al. (1997) now appear in the references with resolved DOIs.
+
+* The package's own methods now point somewhere a reader can follow: the arXiv preprints
+  for the Ebrahim--Farrington test, the benchmark study and the thesis, and the archived
+  reproduction materials for the EDGE test, the EDGES ensemble, the detection-subspaces
+  framework and `shrink.gof()`.
+
+* The examples show how to *read* the returned panel -- subsetting by p-value, counting
+  by family, contrasting a correctly specified model against one with an omitted quadratic
+  term, varying `G` -- rather than only how to call the function.
+
+* The `Description` field predated `legoft()` and `shrink.gof()` and mentioned neither.
+
+## Performance
+
+* `gof_lecessie()` is much faster at the sample sizes where it was unusable, with
+  **identical numerics**.
+  Nothing about the test changed: not the statistic, not the moment reference, not the
+  degrees of freedom, not the p-value. Two exact algebraic identities replaced two
+  matrix products that were costing O(n^3):
+
+  - The moment reference (I-H)'R(I-H) is now assembled from the rank-p factors of
+    H = VX(X'VX)^{-1}X' instead of forming H as an n-by-n matrix and multiplying it
+    out, which is O(n^2 p).
+  - The variance term 2 tr(MVMV) is evaluated as 2 sum_ij M_ij^2 mu2_i mu2_j, which is
+    O(n^2). This is not a new identity: le Cessie and van Houwelingen (1995) state the
+    variance in exactly that elementwise form in eq. (A.6) before collapsing it to the
+    trace. The package had been computing the trace version.
+
+  Measured against the previous implementation, both byte-compiled and called through
+  the installed package: 2.5x at n = 200, 4.5x at n = 500, 11.0x at n = 1000, 42.6x at
+  n = 2000 and 87.7x at n = 3000 (48.1 s down to 1.1 s, and 139.9 s down to 1.6 s). The
+  ratio grows with n because the change is O(n^3) to O(n^2 p) rather than a constant
+  factor; at small n the shared cost of building the kernel matrix, which is unchanged,
+  still dominates. The largest relative difference in the statistic was 6e-14 across
+  null models, misspecified models, factor covariates and designs whose fitted
+  probabilities reach machine zero. Rejection rates agree to four decimal places under
+  the null and under alternatives, so no previously reported result moves.
+  `tests/testthat/test-lecessie-algebra.R` pins the agreement at 1e-12 relative against
+  the previous code, kept verbatim.
+
+  Memory is unchanged: the test still builds the n-by-n kernel matrix and is still
+  O(n^2) in space. This change buys time, not memory.
+
+* The comment attached to the 2.4.1 transpose fix was wrong about the source and has
+  been corrected. It said `smwrStats::leCessie.test()` was written for ordinary least
+  squares, where the hat matrix is symmetric and the transpose is a no-op. It is not:
+  that function computes the weighted, non-symmetric H correctly and then omits the
+  transpose, so it departs from le Cessie and van Houwelingen (1995), Section 4, which
+  prescribes (I-H)'R(I-H) in words. The omission is a size bug rather than a power bug.
+  At n = 200 over 4000 replicates, the smwrStats form rejects a true null 7.05% of the
+  time at the 5% level against 5.55% for the corrected form, and 7.62% against 5.15%
+  when the fitted probabilities are extreme; power against a quadratic or an
+  interaction departure is 1.000 either way.
+
+## Notes on what is *not* here
+
+* A ridge rule shrunk toward the equal-weight combination ("shrink-to-CCT") was one of
+  six candidates evaluated during development and was **not selected**: it ties the
+  equal-weight rule on most training folds and loses on oscillating departures (0.820
+  against 0.990). Its appeal was that it reduces exactly to the equal-weight rule in the
+  limit; `legoft()` has that same property at the boundary of its own weight family, so
+  nothing is lost by omitting it. The candidate results are archived with the manuscript.
+
+# ebrahim.gof 2.4.1
+
+## Bug fix
+
+* `le-Cessie` (the le Cessie--van Houwelingen smoothed-residual test) computed its
+  moment reference as `(I - H) R (I - H)`, where the residual expansion requires
+  `(I - H)' R (I - H)`. In a weighted fit `H = VX(X'VX)^{-1}X'` is idempotent but
+  **not symmetric**, so the transpose matters; the inherited implementation came from
+  the unweighted linear-model setting, where the two forms coincide. Only the
+  reference moments (`E[Q]`, `Var[Q]`, and hence the matched degrees of freedom and
+  the p-value) were affected -- the raw quadratic form `Q` was always correct.
+
+  **Wording corrected in 2.5.0.** The 2.4.1 note said "the statistic was always correct".
+  That is true of the raw `Q` and misleading about the `Statistic` column users actually
+  see: that column reports `Q` rescaled by the matched moments, `Q * 2E[Q]/Var[Q]`, so it
+  moves with the correction exactly as the degrees of freedom and the p-value do. On the
+  package's own regression example the reported statistic goes from 16.794627 to
+  15.895427 and the p-value from 0.149928 to 0.177213 (the matched degrees of freedom
+  are 11.648746 after the fix). Expect the printed statistic and degrees of freedom to
+  change too, not only the p-value.
+  The consequence was a mildly liberal test: at `n = 1000` with the default bandwidth
+  the empirical null size was about 0.063 instead of the exact-moment value 0.054.
+  Users comparing results across versions should expect slightly larger p-values
+  (hence slightly lower power) from `le-Cessie` after this fix.
+
 # ebrahim.gof 2.4.0
 
 ## Print method
