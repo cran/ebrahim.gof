@@ -12,7 +12,7 @@
 
 <meta name="author" content="Ebrahim Khaled Ebrahim" />
 
-<meta name="date" content="2026-08-26" />
+<meta name="date" content="2026-09-08" />
 
 <title>Introduction to the Ebrahim-Farrington Goodness-of-Fit Test</title>
 
@@ -342,7 +342,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore">Introduction to the Ebrahim-Farrington
 Goodness-of-Fit Test</h1>
 <h4 class="author">Ebrahim Khaled Ebrahim</h4>
-<h4 class="date">2026-08-26</h4>
+<h4 class="date">2026-09-08</h4>
 
 
 
@@ -625,65 +625,43 @@ reference (<code>method = &quot;chisq&quot;</code>); use
 </div>
 <div id="power-analysis-example" class="section level2">
 <h2>Power Analysis Example</h2>
-<p>Let’s examine the power of the test to detect model
-misspecification:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># Function to simulate power under model misspecification</span></span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>simulate_power <span class="ot">&lt;-</span> <span class="cf">function</span>(n, <span class="at">beta_quad =</span> <span class="fl">0.1</span>, <span class="at">n_sims =</span> <span class="dv">100</span>, <span class="at">G =</span> <span class="dv">10</span>) {</span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  rejections_ef <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  rejections_hl <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  </span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_sims) {</span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>    <span class="co"># Generate data with quadratic term (true model)</span></span>
-<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">runif</span>(n, <span class="sc">-</span><span class="dv">2</span>, <span class="dv">2</span>)</span>
-<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>    linpred_true <span class="ot">&lt;-</span> <span class="dv">0</span> <span class="sc">+</span> x <span class="sc">+</span> beta_quad <span class="sc">*</span> x<span class="sc">^</span><span class="dv">2</span></span>
-<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>    prob_true <span class="ot">&lt;-</span> <span class="fu">plogis</span>(linpred_true)</span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>    y <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="dv">1</span>, prob_true)</span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>    </span>
-<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>    <span class="co"># Fit misspecified linear model (omitting quadratic term)</span></span>
-<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>    model_mis <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> x, <span class="at">family =</span> <span class="fu">binomial</span>())</span>
-<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>    pred_probs <span class="ot">&lt;-</span> <span class="fu">fitted</span>(model_mis)</span>
-<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>    </span>
-<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>    <span class="co"># Ebrahim-Farrington test</span></span>
-<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>    ef_test <span class="ot">&lt;-</span> <span class="fu">ef.gof</span>(y, pred_probs, <span class="at">G =</span> G)</span>
-<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>    <span class="cf">if</span> (ef_test<span class="sc">$</span>p_value <span class="sc">&lt;</span> <span class="fl">0.05</span>) rejections_ef <span class="ot">&lt;-</span> rejections_ef <span class="sc">+</span> <span class="dv">1</span></span>
-<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>    </span>
-<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>    <span class="co"># Hosmer-Lemeshow test (if available)</span></span>
-<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">requireNamespace</span>(<span class="st">&quot;ResourceSelection&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
-<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>      hl_test <span class="ot">&lt;-</span> ResourceSelection<span class="sc">::</span><span class="fu">hoslem.test</span>(y, pred_probs, <span class="at">g =</span> G)</span>
-<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>      <span class="cf">if</span> (hl_test<span class="sc">$</span>p.value <span class="sc">&lt;</span> <span class="fl">0.05</span>) rejections_hl <span class="ot">&lt;-</span> rejections_hl <span class="sc">+</span> <span class="dv">1</span></span>
-<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>    }</span>
-<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a>  }</span>
-<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a>  </span>
-<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>  power_ef <span class="ot">&lt;-</span> rejections_ef <span class="sc">/</span> n_sims</span>
-<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a>  power_hl <span class="ot">&lt;-</span> <span class="cf">if</span> (<span class="fu">requireNamespace</span>(<span class="st">&quot;ResourceSelection&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
-<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a>    rejections_hl <span class="sc">/</span> n_sims</span>
-<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a>    <span class="cn">NA</span></span>
-<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a>  }</span>
-<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a>  </span>
-<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">power_ef =</span> power_ef, <span class="at">power_hl =</span> power_hl))</span>
-<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a>}</span>
-<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a></span>
-<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a><span class="co"># Calculate power for different sample sizes</span></span>
-<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a>sample_sizes <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">200</span>, <span class="dv">500</span>, <span class="dv">1000</span>)</span>
-<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a>power_results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a>  <span class="at">n =</span> sample_sizes,</span>
-<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a>  <span class="at">EbrahimFarrington_Power =</span> <span class="fu">sapply</span>(sample_sizes, <span class="cf">function</span>(n) {</span>
-<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a>    <span class="fu">simulate_power</span>(n, <span class="at">beta_quad =</span> <span class="fl">0.15</span>, <span class="at">n_sims =</span> <span class="dv">50</span>)<span class="sc">$</span>power_ef</span>
-<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a>  })</span>
-<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a>)</span>
-<span id="cb8-46"><a href="#cb8-46" tabindex="-1"></a></span>
-<span id="cb8-47"><a href="#cb8-47" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">requireNamespace</span>(<span class="st">&quot;ResourceSelection&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
-<span id="cb8-48"><a href="#cb8-48" tabindex="-1"></a>  power_results<span class="sc">$</span>HosmerLemeshow_Power <span class="ot">&lt;-</span> <span class="fu">sapply</span>(sample_sizes, <span class="cf">function</span>(n) {</span>
-<span id="cb8-49"><a href="#cb8-49" tabindex="-1"></a>    <span class="fu">simulate_power</span>(n, <span class="at">beta_quad =</span> <span class="fl">0.15</span>, <span class="at">n_sims =</span> <span class="dv">50</span>)<span class="sc">$</span>power_hl</span>
-<span id="cb8-50"><a href="#cb8-50" tabindex="-1"></a>  })</span>
-<span id="cb8-51"><a href="#cb8-51" tabindex="-1"></a>}</span>
-<span id="cb8-52"><a href="#cb8-52" tabindex="-1"></a></span>
-<span id="cb8-53"><a href="#cb8-53" tabindex="-1"></a><span class="fu">print</span>(power_results)</span>
-<span id="cb8-54"><a href="#cb8-54" tabindex="-1"></a><span class="co">#&gt;      n EbrahimFarrington_Power HosmerLemeshow_Power</span></span>
-<span id="cb8-55"><a href="#cb8-55" tabindex="-1"></a><span class="co">#&gt; 1  200                    0.06                 0.12</span></span>
-<span id="cb8-56"><a href="#cb8-56" tabindex="-1"></a><span class="co">#&gt; 2  500                    0.14                 0.14</span></span>
-<span id="cb8-57"><a href="#cb8-57" tabindex="-1"></a><span class="co">#&gt; 3 1000                    0.20                 0.22</span></span></code></pre></div>
+<p>How much does directing the test buy? The comparison below runs each
+test on the <em>same</em> simulated datasets, so the difference between
+the columns is the tests’ behaviour and not the noise between two
+separate runs. The data carry a quadratic term; the fitted model omits
+it.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>power_paired <span class="ot">&lt;-</span> <span class="cf">function</span>(n, <span class="at">beta_quad =</span> <span class="fl">0.15</span>, <span class="at">n_sims =</span> <span class="dv">200</span>, <span class="at">G =</span> <span class="dv">10</span>) {</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  have_rs <span class="ot">&lt;-</span> <span class="fu">requireNamespace</span>(<span class="st">&quot;ResourceSelection&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  rej <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">EF =</span> <span class="dv">0</span>, <span class="at">HL =</span> <span class="dv">0</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(n_sims)) {</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>    x    <span class="ot">&lt;-</span> <span class="fu">runif</span>(n, <span class="sc">-</span><span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>    y    <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="dv">1</span>, <span class="fu">plogis</span>(x <span class="sc">+</span> beta_quad <span class="sc">*</span> x<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>    fit  <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> x, <span class="at">family =</span> <span class="fu">binomial</span>())      <span class="co"># misspecified: no quadratic term</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>    p    <span class="ot">&lt;-</span> <span class="fu">fitted</span>(fit)</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>    <span class="co"># both tests see this same dataset</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">ef.gof</span>(y, p, <span class="at">G =</span> G)<span class="sc">$</span>p_value <span class="sc">&lt;</span> <span class="fl">0.05</span>) rej[<span class="st">&quot;EF&quot;</span>] <span class="ot">&lt;-</span> rej[<span class="st">&quot;EF&quot;</span>] <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>    <span class="cf">if</span> (have_rs <span class="sc">&amp;&amp;</span></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>        ResourceSelection<span class="sc">::</span><span class="fu">hoslem.test</span>(y, p, <span class="at">g =</span> G)<span class="sc">$</span>p.value <span class="sc">&lt;</span> <span class="fl">0.05</span>) rej[<span class="st">&quot;HL&quot;</span>] <span class="ot">&lt;-</span> rej[<span class="st">&quot;HL&quot;</span>] <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>  }</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>  <span class="fu">c</span>(<span class="at">n =</span> n, <span class="at">EF =</span> <span class="fu">unname</span>(rej[<span class="st">&quot;EF&quot;</span>]) <span class="sc">/</span> n_sims,</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>    <span class="at">HL =</span> <span class="cf">if</span> (have_rs) <span class="fu">unname</span>(rej[<span class="st">&quot;HL&quot;</span>]) <span class="sc">/</span> n_sims <span class="cf">else</span> <span class="cn">NA_real_</span>)</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>}</span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a></span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>power_results <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">c</span>(<span class="dv">200</span>, <span class="dv">500</span>, <span class="dv">1000</span>), power_paired)))</span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a><span class="fu">print</span>(power_results, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co">#&gt;     n    EF    HL</span></span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="co">#&gt;   200 0.070 0.065</span></span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="co">#&gt;   500 0.165 0.155</span></span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="co">#&gt;  1000 0.275 0.275</span></span></code></pre></div>
+<p>Read the table rather than a headline: on this misfit the two are
+close at the smaller sample sizes, and any separation appears only as
+<code>n</code> grows. The directed tests of the next section are where
+the gain against a <em>shape</em> departure shows up; the omnibus EF
+test is built for breadth, not for beating Hosmer-Lemeshow on a
+departure that grouping already exposes.</p>
 </div>
 <div id="handling-grouped-data-original-farrington-test" class="section level2">
 <h2>Handling Grouped Data (Original Farrington Test)</h2>

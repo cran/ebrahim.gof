@@ -64,19 +64,29 @@ Satterthwaite scaled-\eqn{\chi^2} approximation (default) or Imhof's method
 combines them via \code{\link{def.ensemble.gof}}.
 }
 \examples{
-set.seed(1)
-n <- 500
-x <- runif(n, -3, 3)
-y <- rbinom(n, 1, 1 / (1 + exp(-(0.6 * x))))
-fit <- glm(y ~ x, family = binomial())
-def.gof(fit)                       # default poly3 basis
-def.gof(fit, basis = "stukel")     # tail-shape basis
-def.gof(fit, basis = "ensemble")   # combine all three (CCT)
+## gof_demo carries a documented smooth calibration misfit: the risk bends in age,
+## and a model linear in age misses it. The point of a directed test is to see that.
+data("gof_demo", package = "ebrahim.gof")
+wrong <- glm(outcome ~ age + bmi + sex + treatment,
+             data = gof_demo, family = binomial())
+def.gof(wrong)                       # default poly3 basis
+def.gof(wrong, basis = "stukel")     # tail-shape basis
+def.gof(wrong, basis = "ensemble")   # combine all three (CCT)
+
+## give the model the term it was missing, and the same test stands down
+right <- glm(outcome ~ poly(age, 2) + bmi + sex + treatment,
+             data = gof_demo, family = binomial())
+def.gof(right)
 
 }
 \references{
-Ebrahim, K. E. and El-Kotory, A. Omnibus versus Directed Goodness-of-Fit Tests
-for Sparse Data in Binary Logistic Regression (companion paper).
+Ebrahim EK, El-Kotory A (2026). "A Directional Hosmer-Lemeshow Goodness-of-Fit
+Test for Sparse Logistic Regression." arXiv:2607.15454 [stat.ME].
+\doi{10.48550/arXiv.2607.15454}
+
+Ebrahim EK, El-Kotory A (2026). "EDGE: A Closed-Form Directed Goodness-of-Fit
+Test for Sparse Logistic Regression." arXiv:2608.20511 [stat.ME].
+\doi{10.48550/arXiv.2608.20511}
 }
 \seealso{
 \code{\link{ef.gof}}, \code{\link{def.ensemble.gof}}.
@@ -84,3 +94,9 @@ for Sparse Data in Binary Logistic Regression (companion paper).
 \author{
 Ebrahim Khaled Ebrahim \email{ebrahimkhaled@alexu.edu.eg}
 }
+\concept{DEF}
+\concept{calibration}
+\concept{directed test}
+\concept{goodness-of-fit}
+\concept{logistic regression}
+\concept{model diagnostics}

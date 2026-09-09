@@ -41,16 +41,25 @@
 #' @author Ebrahim Khaled Ebrahim \email{ebrahimkhaled@@alexu.edu.eg}
 #'
 #' @examples
-#' set.seed(1)
-#' n <- 500
-#' x <- runif(n, -3, 3)
-#' y <- rbinom(n, 1, 1 / (1 + exp(-(0.6 * x))))
-#' fit <- glm(y ~ x, family = binomial())
-#' def.ensemble.gof(fit)                 # CCT of the three DEF bases
-#' def.ensemble.gof(fit, add_ef = TRUE)  # add the omnibus EF
+#' data("gof_demo", package = "ebrahim.gof")
+#' wrong <- glm(outcome ~ age + bmi + sex + treatment,
+#'              data = gof_demo, family = binomial())
+#' def.ensemble.gof(wrong)                 # CCT of the three DEF bases
+#' def.ensemble.gof(wrong, add_ef = TRUE)  # add the omnibus EF
+#'
+#' ## the corrected model, for contrast
+#' right <- glm(outcome ~ poly(age, 2) + bmi + sex + treatment,
+#'              data = gof_demo, family = binomial())
+#' def.ensemble.gof(right)
 #'
 #' @seealso \code{\link{def.gof}}, \code{\link{ef.gof}}.
 #' @importFrom stats fitted pchisq
+#' @concept goodness-of-fit
+#' @concept calibration
+#' @concept logistic regression
+#' @concept model diagnostics
+#' @concept ensemble
+#' @concept DEF
 #' @export
 def.ensemble.gof <- function(object, predicted_probs = NULL, X = NULL,
                              components = c("poly2", "poly3", "stukel"),
@@ -123,6 +132,12 @@ def.ensemble.gof <- function(object, predicted_probs = NULL, X = NULL,
 #'
 #' @seealso \code{\link{def.ensemble.gof}} (legacy name), \code{\link{edge.gof}},
 #'   \code{\link{def.gof}}.
+#' @concept goodness-of-fit
+#' @concept calibration
+#' @concept logistic regression
+#' @concept model diagnostics
+#' @concept ensemble
+#' @concept DEF
 #' @export
 edges.gof <- function(...) def.ensemble.gof(...)
 

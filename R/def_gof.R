@@ -44,23 +44,39 @@
 #'   \code{\link{def.ensemble.gof}}.
 #'
 #' @references
-#' Ebrahim, K. E. and El-Kotory, A. Omnibus versus Directed Goodness-of-Fit Tests
-#' for Sparse Data in Binary Logistic Regression (companion paper).
+#' Ebrahim EK, El-Kotory A (2026). "A Directional Hosmer-Lemeshow Goodness-of-Fit
+#' Test for Sparse Logistic Regression." arXiv:2607.15454 [stat.ME].
+#' \doi{10.48550/arXiv.2607.15454}
+#'
+#' Ebrahim EK, El-Kotory A (2026). "EDGE: A Closed-Form Directed Goodness-of-Fit
+#' Test for Sparse Logistic Regression." arXiv:2608.20511 [stat.ME].
+#' \doi{10.48550/arXiv.2608.20511}
 #'
 #' @author Ebrahim Khaled Ebrahim \email{ebrahimkhaled@@alexu.edu.eg}
 #'
 #' @examples
-#' set.seed(1)
-#' n <- 500
-#' x <- runif(n, -3, 3)
-#' y <- rbinom(n, 1, 1 / (1 + exp(-(0.6 * x))))
-#' fit <- glm(y ~ x, family = binomial())
-#' def.gof(fit)                       # default poly3 basis
-#' def.gof(fit, basis = "stukel")     # tail-shape basis
-#' def.gof(fit, basis = "ensemble")   # combine all three (CCT)
+#' ## gof_demo carries a documented smooth calibration misfit: the risk bends in age,
+#' ## and a model linear in age misses it. The point of a directed test is to see that.
+#' data("gof_demo", package = "ebrahim.gof")
+#' wrong <- glm(outcome ~ age + bmi + sex + treatment,
+#'              data = gof_demo, family = binomial())
+#' def.gof(wrong)                       # default poly3 basis
+#' def.gof(wrong, basis = "stukel")     # tail-shape basis
+#' def.gof(wrong, basis = "ensemble")   # combine all three (CCT)
+#'
+#' ## give the model the term it was missing, and the same test stands down
+#' right <- glm(outcome ~ poly(age, 2) + bmi + sex + treatment,
+#'              data = gof_demo, family = binomial())
+#' def.gof(right)
 #'
 #' @seealso \code{\link{ef.gof}}, \code{\link{def.ensemble.gof}}.
 #' @importFrom stats fitted predict model.matrix qlogis poly pchisq
+#' @concept goodness-of-fit
+#' @concept calibration
+#' @concept logistic regression
+#' @concept model diagnostics
+#' @concept DEF
+#' @concept directed test
 #' @export
 def.gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
                     basis  = c("poly3", "poly2", "stukel", "ensemble"),

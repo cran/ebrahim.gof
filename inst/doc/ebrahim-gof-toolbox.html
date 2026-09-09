@@ -544,6 +544,66 @@ single p-value:</p>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt;           Test Combiner         Components k     p_value</span></span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; 1 DEF ensemble      cct poly2+poly3+stukel 3 0.006959379</span></span></code></pre></div>
 </div>
+<div id="beyond-the-battery" class="section level2">
+<h2>Beyond the battery</h2>
+<p><code>run.all.gof()</code> selects among the classical tests and the
+directed ones. Several of the package’s procedures sit outside it,
+because they need something the battery does not have: a penalty, a
+frozen set of weights, or a scorer of your own. They are called directly
+on the same fitted model.</p>
+<div id="penalised-ridge-fits" class="section level3">
+<h3>Penalised (ridge) fits</h3>
+<p>Under a penalty the classical references are not merely weak but
+<strong>invalid</strong>: shrinkage biases the fitted probabilities, so
+the grouped residuals acquire a non-centrality and the usual chi-squared
+reference is wrong. Two functions apply the same correction and differ
+only in what they refer it to.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">4</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">300</span>; p <span class="ot">&lt;-</span> <span class="dv">8</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(n <span class="sc">*</span> p), n, p)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="dv">1</span>, <span class="fu">plogis</span>(<span class="fl">0.2</span> <span class="sc">+</span> X <span class="sc">%*%</span> <span class="fu">c</span>(<span class="fl">0.9</span>, <span class="sc">-</span><span class="fl">0.6</span>, <span class="fl">0.4</span>, <span class="fu">rep</span>(<span class="dv">0</span>, p <span class="sc">-</span> <span class="dv">3</span>))))</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co"># closed form: one fit, no resampling, and no Monte Carlo error in the p-value</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="fu">calm.gof</span>(X, y, <span class="at">lambda =</span> <span class="dv">40</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; CALM: closed-form goodness of fit for penalized logistic regression</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; lambda = 40 (theory scale) = 0.1333 on glmnet&#39;s scale | G = 10 | p/n = 0.027</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt;   SC.HL             statistic    6.189   p = 0.4904</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt;   SC.EDGE           statistic    3.453   p = 0.1017</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;   SC.EDGE.adaptive  statistic    3.453   p = 0.1017   [degree 3, rho_hat 0.93]</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; SC.EDGE.adaptive is the statistic to prefer; see ?calm.gof for the scope of the reference.</span></span></code></pre></div>
+<p><code>shrink.gof()</code> computes the same statistics and calibrates
+them by prepivoting instead, which costs <code>B</code> penalised
+refits. Prefer <code>calm.gof()</code> unless you need
+<code>penalize</code> to choose which columns are shrunk, or
+<code>p &gt;= n</code>, which it refuses. Note the penalty scale:
+<code>lambda</code> here is <code>n</code> times a
+<strong>glmnet</strong> lambda, and <code>calm.gof()</code> takes a
+<code>lambda_scale</code> argument while <code>shrink.gof()</code> does
+not.</p>
+<p><code>?calm.gof</code> states where the reference is validated. It is
+not validated for strongly unbalanced outcomes once <code>p/n</code> is
+an appreciable fraction, and the function warns when you call it
+there.</p>
+</div>
+<div id="frozen-weight-and-pretrained-tests" class="section level3">
+<h3>Frozen-weight and pretrained tests</h3>
+<p><code>legoft()</code> combines eleven statistics with weights fixed
+offline and shipped frozen, so two analysts obtain the same p-value;
+<code>legoft.localize()</code> then says which domain of evidence
+carries the misfit, with familywise error control.
+<code>deepgof1()</code> is a pretrained convolutional statistic whose
+level comes from your own parametric bootstrap rather than from the
+network. None of these is retrained when you call it.</p>
+</div>
+<div id="building-your-own" class="section level3">
+<h3>Building your own</h3>
+<p><code>gof.features()</code> turns a fitted model into a feature
+vector of test statistics, and <code>deploy.gof()</code> refers a scorer
+of yours to a parametric bootstrap under the fitted model.</p>
+</div>
+</div>
 <div id="going-further" class="section level2">
 <h2>Going further</h2>
 <ul>

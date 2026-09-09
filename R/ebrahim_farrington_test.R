@@ -51,8 +51,10 @@
 #'   \item For binary data with automatic grouping (\code{G} specified): Use the
 #'         Ebrahim-Farrington test which is computationally efficient and doesn't
 #'         require the model specification.
-#'   \item For grouped data (\code{m} provided): Use the original Farrington test
-#'         which requires the fitted model object.
+#'   \item For grouped data (\code{m} provided \emph{and} \code{G} set to \code{NULL}):
+#'         Use the original Farrington test, which requires the fitted model object.
+#'         Leaving \code{G} at its default keeps the automatic grouping, and \code{m}
+#'         and \code{model} are then ignored.
 #'   \item The test statistic follows a standard normal distribution under the
 #'         null hypothesis of adequate model fit.
 #'   \item For binary data with \code{m=1} for all observations and no grouping,
@@ -60,9 +62,21 @@
 #' }
 #'
 #' @references
-#' Farrington, C. P. (1996). On Assessing Goodness of Fit of Generalized Linear Models to Sparse Data. *Journal of the Royal Statistical Society. Series B (Methodological)*, 58(2), 349-360.
-#' Ebrahim, K. E. (2025). Goodness-of-Fits Tests and Calibration Machine Learning Algorithms for Logistic Regression Model with Sparse Data. *Master's Thesis*, Alexandria University.
-#' Hosmer, D. W., & Lemeshow, S. (1980). A goodness-of-fit test for the multiple logistic regression model. *Communications in Statistics - Theory and Methods*, 9(10), 1043–1069. https://doi.org/10.1080/03610928008827941
+#' Farrington CP (1996). "On Assessing Goodness of Fit of Generalized Linear Models
+#' to Sparse Data." \emph{Journal of the Royal Statistical Society, Series B},
+#' \bold{58}(2), 349-360. \doi{10.1111/j.2517-6161.1996.tb02086.x}
+#'
+#' Hosmer DW, Lemeshow S (1980). "A goodness-of-fit test for the multiple logistic
+#' regression model." \emph{Communications in Statistics - Theory and Methods},
+#' \bold{9}(10), 1043-1069. \doi{10.1080/03610928008827941}
+#'
+#' Ebrahim EK, El-Kotory A (2026). "A Directional Hosmer-Lemeshow Goodness-of-Fit
+#' Test for Sparse Logistic Regression." arXiv:2607.15454 [stat.ME].
+#' \doi{10.48550/arXiv.2607.15454}
+#'
+#' Ebrahim EK (2026). "Goodness-of-Fit Tests and Calibration Machine-Learning
+#' Algorithms for Logistic Regression with Sparse Data." M.Sc. thesis, Alexandria
+#' University. arXiv:2608.11140 [stat.ME]. \doi{10.48550/arXiv.2608.11140}
 #'
 #' @author Ebrahim Khaled Ebrahim \email{ebrahimkhaled@@alexu.edu.eg}
 #'
@@ -88,9 +102,7 @@
 #' result_20 <- ef.gof(y, predicted_probs, G = 20)
 #' 
 #' # Example 3: Grouped data (original Farrington test)
-#' # Note: This requires actual grouped data with trials > 1
-#' \dontrun{
-#' # Simulated grouped data
+#' set.seed(456)
 #' n_groups <- 50
 #' m_trials <- sample(5:20, n_groups, replace = TRUE)
 #' x_grouped <- rnorm(n_groups)
@@ -104,15 +116,24 @@
 #'                      data = data_grouped, family = binomial())
 #' predicted_probs_grouped <- fitted(model_grouped)
 #' 
-#' # Original Farrington test
-#' result_grouped <- ef.gof(y_grouped, predicted_probs_grouped, 
-#'                          model = model_grouped, m = m_trials)
+#' # Original Farrington test. G = NULL is required: left at its default of 10 the
+#' # call takes the automatic-grouping branch instead, which ignores 'model' and 'm'
+#' # and refers binomial counts to the binary statistic.
+#' result_grouped <- ef.gof(y_grouped, predicted_probs_grouped,
+#'                          model = model_grouped, m = m_trials,
+#'                          G = NULL)
 #' print(result_grouped)
-#' }
 #'
 #' @seealso
 #' \code{\link[ResourceSelection]{hoslem.test}} for the Hosmer-Lemeshow test
 #'
+#' @concept goodness-of-fit
+#' @concept calibration
+#' @concept logistic regression
+#' @concept model diagnostics
+#' @concept Ebrahim-Farrington
+#' @concept sparse data
+#' @concept Hosmer-Lemeshow
 #' @export
 ef.gof <- function(y, predicted_probs = NULL, model = NULL, m = NULL, G = 10,
                    method = c("chisq", "normal")) {
@@ -151,9 +172,9 @@ ef.gof <- function(y, predicted_probs = NULL, model = NULL, m = NULL, G = 10,
   if (!is.null(G)) {
     # Ebrahim-Farrington test with automatic grouping
     if (!is.null(model) || !is.null(m)) {
-      message("Note: When using Ebrahim-Farrington grouping (G specified), ",
-              "the 'model' and 'm' parameters are not needed. ",
-              "Ignoring these parameters for grouping mode.")
+      warning("Ebrahim-Farrington grouping is in force (G is not NULL), so 'model' and ",
+              "'m' are ignored. For the original Farrington test on grouped data, set ",
+              "G = NULL.")
     }
     
     if (!is.numeric(G) || length(G) != 1 || G < 2) {

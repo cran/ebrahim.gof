@@ -29,3 +29,12 @@ ef.gof(fit)                   # the omnibus EF test
 ## ----ensemble-----------------------------------------------------------------
 def.ensemble.gof(fit)
 
+## -----------------------------------------------------------------------------
+set.seed(4)
+n <- 300; p <- 8
+X <- matrix(rnorm(n * p), n, p)
+y <- rbinom(n, 1, plogis(0.2 + X %*% c(0.9, -0.6, 0.4, rep(0, p - 3))))
+
+# closed form: one fit, no resampling, and no Monte Carlo error in the p-value
+calm.gof(X, y, lambda = 40)
+

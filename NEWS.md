@@ -1,3 +1,117 @@
+# ebrahim.gof 2.7.0
+
+## Bug fix
+
+* The grouped-data example on `?ef.gof` now passes `G = NULL`, and runs. Without it the
+  call fell through to the automatic-grouping branch, which ignores `m` and `model` and
+  refers binomial counts to the binary statistic, so the documented example reported a
+  p-value of zero on data drawn from the fitted model. The example is no longer wrapped
+  in `\dontrun{}`, so `R CMD check` exercises the original Farrington branch as well.
+  The `@note` bullet that said supplying `m` selects the original test has been corrected
+  to say that `G` must be set to `NULL`.
+
+* `gof.features()` honoured its documented `tests` argument only after the fact: it ran
+  the whole battery and subset the result, so a caller asking for nine p-values paid for
+  all twenty-five. The returned feature vector is unchanged; only the cost was wrong.
+
+* `print.shrink.gof()` was defined but never registered, so `shrink.gof()` results printed
+  as a raw nested list. It is now an S3 method, and reports `p/n` as `print.calm.gof()`
+  already did.
+
+## Documentation
+
+* The catalogue entry for `Deviance` called it "the more conservative of the two" against
+  `Pearson`. Measured on correctly specified models it rejects 100 per cent where Pearson
+  rejects none: on ungrouped binary data its expectation depends on the fitted risks alone,
+  so the direction of the error is set by the risk profile and not by the fit. Corrected.
+
+* `?deepgof1` said to see `run.all.gof()` to run it alongside the battery. It is not one of
+  the tests the battery selects, so naming it in `tests` errors. Both that sentence and the
+  battery's own text now say which procedures sit outside the panel.
+
+* `?shrink.gof` gained a section on choosing between it and `calm.gof()`, including the
+  trap that `calm.gof()` takes `lambda_scale` and `shrink.gof()` does not, so the same
+  number means penalties a factor of n apart.
+
+* The Details headings of `?run.all.gof` now carry the literal `Family` labels that appear
+  on every row of the output, so a reader can go from a label to its section.
+
+* The examples on `?def.gof` and `?def.ensemble.gof` fitted correctly specified models, so
+  no test ever fired. They now use `gof_demo`, whose documented misfit the directed tests
+  detect (p = 0.015), and then the corrected model, which they do not (p = 0.797).
+
+* Both vignettes predated 2.5.0 and mentioned none of the methods added since. The toolbox
+  vignette gained a section on the penalised, frozen-weight and pretrained procedures.
+
+* A pkgdown site is configured (`_pkgdown.yml` and a workflow), giving the reference pages
+  and vignettes indexable HTML addresses.
+
+* `ef.gof()` now warns, rather than messages, when `model` or `m` is supplied while `G` is
+  left at its default, since both are then ignored.
+
+* Smoke tests were added for ten exports that had none, `calm.gof()` among them.
+
+* The `Description` field now names `calm.gof()`, `edges.gof()` and `cdef.gof()`, and gives
+  the penalized case its own sentence rather than filing `shrink.gof()` under sparse data.
+  The field is frozen for the life of a release and is the text CRAN's own search indexes,
+  so an omission there costs months; this is the same slip recorded at 2.5.0.
+
+* `Authors@R` used positional arguments, which made "Khaled Ebrahim" the family name, so
+  `citation()` rendered "Khaled Ebrahim E" and BibTeX filed the package under K. The
+  arguments are now named and the surname agrees with `inst/CITATION`.
+
+* `?shrink.gof` had two roxygen drafts merged, which left every parameter documented twice
+  and the real title and description buried inside `\value`, so the rendered page's
+  description was its own title repeated. Rewritten.
+
+* `?calm.gof` now documents its class-balance scope, and `calm.gof()` warns when it is
+  called on a strongly unbalanced outcome, where the reference is not validated.
+
+* `?legoft` no longer carries a title indistinguishable from `?deepgof1`.
+
+* The package landing page, `?ebrahim.gof`, is no longer marked internal and now opens
+  with a table for choosing among the tests.
+
+* Every function page gained `\concept` entries, which is what `??` and the documentation
+  mirrors search.
+
+* `inst/CITATION` took its version from a hardcoded string, which had been stale since
+  2.4.0; it now reads `meta$Version`. The benchmark paper is recorded as in press at the
+  Journal of Intelligent Computing and Data Science rather than as a preprint.
+
+* The full-battery example forwards `nsim = 20` to BAGofT, which cuts
+  `R CMD check --run-donttest` from 213 to 54 seconds without changing what it shows.
+
+
+## New features
+
+* `calm.gof()` -- a closed-form reference distribution for the shrinkage-corrected
+  goodness-of-fit statistics, so that they can be used without a bootstrap. It is the
+  companion of `shrink.gof()`: the statistics are the same, only the reference differs,
+  and where `shrink.gof()` needs several hundred penalized refits `calm.gof()` needs one
+  fit and returns in a fraction of a second.
+
+  The reference is built by replacing the fitted Bernoulli variance, which shrinkage
+  inflates towards one quarter, by a de-noised estimate of the null variance obtained
+  from the fit alone through the observable adjustments of Bellec (2025), and then
+  reading the exact tail of the resulting weighted chi-squared law (Davies 1980).
+
+  Three statistics are returned. `SC.EDGE.adaptive` is the one to prefer: it projects
+  the corrected residual onto orthogonal polynomials in the group-mean fitted
+  probability and chooses the degree from the data, keeping the cubic direction only
+  when the fitted index is accurate enough to carry a cubic signal. `SC.HL` is the
+  shrinkage-corrected Hosmer-Lemeshow statistic, reported for continuity with that
+  tradition; its reference relies on a constant calibrated by simulation, which does
+  not transfer to every design, and `?calm.gof` says where it fails.
+
+  The reference is validated for aspect ratios p/n up to 0.4 and for penalties that
+  shrink towards zero. The lasso is not covered.
+
+## Dependency change
+
+* `CompQuadForm` moves from Suggests to Imports. `calm.gof()` cannot produce a p-value
+  without it, so it is no longer optional.
+
 # ebrahim.gof 2.6.0
 
 ## New features
