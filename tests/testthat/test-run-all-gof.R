@@ -8,10 +8,45 @@ test_that("run.all.gof returns a tidy battery for a model", {
   res <- run.all.gof(make_fit(), include_slow = FALSE)
   expect_s3_class(res, "data.frame")
   expect_equal(names(res), c("Test", "Family", "Statistic", "df", "p_value", "Note"))
-  expect_true(all(c("EF", "DEF.poly3", "HL", "Stukel") %in% res$Test))
+  expect_true(all(c("EF", "DEF.poly3", "DEF.sym", "HL", "Stukel") %in% res$Test))
   expect_true(any(grepl("Ensemble", res$Test)))
   pv <- res$p_value[is.finite(res$p_value)]
   expect_true(all(pv >= 0 & pv <= 1))
+})
+
+test_that("run.all.gof(G = 'auto') resolves the number of groups once, for every row", {
+  fit <- make_fit()                                                  # n = 500, so G = 20
+  a <- as.data.frame(run.all.gof(fit, G = "auto", include_slow = FALSE, install = "no"))
+  b <- as.data.frame(run.all.gof(fit, G = 20, include_slow = FALSE, install = "no"))
+  expect_identical(a$Test, b$Test)
+  expect_equal(a[, c("Statistic", "df", "p_value")], b[, c("Statistic", "df", "p_value")])
+  expect_true(is.finite(a$p_value[a$Test == "EF"]))
+  expect_equal(a$df[a$Test == "EF"], 18)
+  def <- grepl("^DEF\\.", a$Test)
+  expect_equal(sum(def), 4)
+  expect_true(all(grepl("G = 20 \\(auto\\)", a$Note[def])))
+  expect_identical(a$Note[!def], b$Note[!def])
+  expect_error(run.all.gof(fit, G = "many"), "single number or 'auto'")
+})
+
+test_that("the ensemble rows stay on the unit form at the battery G, and say so", {
+  fit <- make_fit()
+  plain <- run.all.gof(fit, include_slow = FALSE, install = "no")
+  ens <- grepl("^Ensemble", plain$Test)
+  expect_equal(sum(ens), 2)
+  expect_true(all(plain$Note[ens] == "Cauchy combination of the directed tests"))
+  moved <- run.all.gof(fit, include_slow = FALSE, install = "no",
+                       control = list(DEF.poly3 = list(weights = "score"), DEF.stukel = list(G = "auto")))
+  expect_identical(moved$Test, plain$Test)
+  expect_true(all(grepl("unit form, G = 10", moved$Note[ens])))
+  expect_match(moved$Note[moved$Test == "DEF.poly3"], "score form")
+  expect_equal(moved$p_value[ens], plain$p_value[ens])
+  expect_equal(moved$p_value[moved$Test == "Ensemble.Vote(3DEF)"], def.ensemble.gof(fit)$p_value)
+  expect_equal(moved$p_value[moved$Test == "Ensemble.Univ(3DEF+EF)"],
+               def.ensemble.gof(fit, add_ef = TRUE)$p_value)
+  sym <- run.all.gof(fit, include_slow = FALSE, install = "no",       # DEF.sym is not an ensemble member
+                     control = list(DEF.sym = list(weights = "score")))
+  expect_true(all(sym$Note[ens] == "Cauchy combination of the directed tests"))
 })
 
 test_that("run.all.gof selects a subset", {
@@ -123,12 +158,13 @@ test_that("Tier-2 tests are opt-in and return valid results", {
   x1 <- runif(n, -3, 3); x2 <- rnorm(n); d <- factor(sample(c("A", "B"), n, replace = TRUE))
   y <- rbinom(n, 1, plogis(0.3 + 0.7 * x1 - 0.4 * x2 + ifelse(d == "B", 0.5, 0)))
   fit <- glm(y ~ x1 + x2 + d, family = binomial())
-  slow_names <- c("HL-GAM", "PR-GAM", "Xie-GAM", "Stute-Zhu", "eHL", "BAGofT", "Lai-Liu-HL")
+  slow_names <- c("HL-GAM", "PR-GAM", "Xie-GAM", "Stute-Zhu", "eHL", "BAGofT", "Lai-Liu-HL",
+                  "Projection")
   expect_false(any(slow_names %in% run.all.gof(fit, include_slow = FALSE)$Test))   # not in default battery
   set.seed(1)
   res <- run.all.gof(fit, include_slow = TRUE,
                      control = list("Stute-Zhu" = list(B = 30), "BAGofT" = list(nsim = 10),
-                                    "Lai-Liu-HL" = list(k = 30)))
+                                    "Lai-Liu-HL" = list(k = 30), "Projection" = list(B = 30)))
   for (tt in slow_names) {
     p <- res$p_value[res$Test == tt]
     expect_true(length(p) == 1 && (is.na(p) || (p >= 0 && p <= 1)))
@@ -178,4 +214,107 @@ test_that("run.all.gof flags a cloglog link misfit", {
   res <- run.all.gof(fit, include_slow = FALSE)
   expect_lt(res$p_value[res$Test == "EF"], 0.05)
   expect_lt(res$p_value[res$Test == "Stukel"], 0.05)
+})
+
+## Stukel's two directions, built the way gof_stukel builds them, for the reference fits below
+stukel_cols <- function(fit) {
+  eta <- predict(fit, type = "link"); ph <- fitted(fit)
+  cbind(za = 0.5 * eta^2 * (ph >= 0.5), zb = -0.5 * eta^2 * (ph < 0.5))
+}
+
+test_that("Stukel is the joint score test and agrees with anova(test = 'Rao')", {
+  fit <- make_fit()
+  res <- run.all.gof(fit, tests = "Stukel")
+  expect_equal(res$Statistic, 1.270855, tolerance = 1e-5)
+  expect_equal(res$df, 2)
+  expect_equal(res$p_value, 0.5297091, tolerance = 1e-5)
+  expect_identical(res$Note, "")
+  Z <- stukel_cols(fit); y <- fit$y; X <- model.matrix(fit)
+  rao <- anova(glm(y ~ X - 1, family = binomial()), glm(y ~ X + Z - 1, family = binomial()),
+               test = "Rao")$Rao[2]
+  expect_equal(res$Statistic, rao, tolerance = 1e-5)
+})
+
+test_that("the marginal Stukel sum is kept for reproducing 2.7.0 and earlier", {
+  skip_if_not_installed("statmod")
+  res <- run.all.gof(make_fit(), tests = "Stukel", control = list(Stukel = list(form = "marginal")))
+  expect_equal(res$Statistic, 0.394475, tolerance = 1e-5)
+  expect_equal(res$df, 2)
+  expect_equal(res$p_value, 0.8209956, tolerance = 1e-5)
+  expect_match(res$Note, "marginal")
+})
+
+test_that("Stukel falls back to one df when every fitted risk is on one side of 0.5", {
+  set.seed(5); x <- runif(400, -3, 3); y <- rbinom(400, 1, plogis(-4 + 0.5 * x))
+  lo <- run.all.gof(glm(y ~ x, family = binomial()), tests = "Stukel")
+  expect_equal(lo$df, 1)
+  expect_equal(lo$Statistic, 0.6245748, tolerance = 1e-5)
+  expect_equal(lo$p_value, 0.4293523, tolerance = 1e-5)
+  expect_match(lo$Note, "no fitted risk at or above 0.5")
+  set.seed(6); x <- runif(400, -3, 3); y <- rbinom(400, 1, plogis(4 + 0.5 * x))
+  hi <- run.all.gof(glm(y ~ x, family = binomial()), tests = "Stukel")
+  expect_equal(hi$df, 1)
+  expect_equal(hi$Statistic, 0.0356688, tolerance = 1e-4)
+  expect_equal(hi$p_value, 0.8502010, tolerance = 1e-5)
+  expect_match(hi$Note, "no fitted risk below 0.5")
+})
+
+test_that("Stukel form = 'lr' is the deviance drop of the augmented fit", {
+  fit <- make_fit()
+  res <- run.all.gof(fit, tests = "Stukel", control = list(Stukel = list(form = "lr")))
+  Z <- stukel_cols(fit); y <- fit$y; X <- model.matrix(fit)
+  f1 <- glm(y ~ X + Z - 1, family = binomial())
+  expect_equal(res$Statistic, deviance(fit) - deviance(f1), tolerance = 1e-6)
+  expect_equal(res$df, 2)
+  expect_equal(res$p_value, pchisq(res$Statistic, 2, lower.tail = FALSE), tolerance = 1e-10)
+
+  set.seed(5); x <- runif(400, -3, 3); y <- rbinom(400, 1, plogis(-4 + 0.5 * x))
+  lo  <- glm(y ~ x, family = binomial())
+  zb  <- stukel_cols(lo)[, "zb"]
+  res <- run.all.gof(lo, tests = "Stukel", control = list(Stukel = list(form = "lr")))
+  expect_equal(res$df, 1)
+  expect_equal(res$Statistic, deviance(lo) - deviance(glm(y ~ x + zb, family = binomial())),
+               tolerance = 1e-6)
+  expect_match(res$Note, "0.5")
+})
+
+test_that("the joint and LR Stukel forms refuse a non-logit fit", {
+  set.seed(3); x <- runif(300, -3, 3)
+  fit <- glm(rbinom(300, 1, pnorm(0.5 * x)) ~ x, family = binomial("probit"))
+  for (f in c("joint", "lr")) {
+    res <- run.all.gof(fit, tests = "Stukel", control = list(Stukel = list(form = f)))
+    expect_true(is.na(res$p_value))
+    expect_match(res$Note, "logit")
+  }
+})
+
+test_that("the joint and LR Stukel forms ignore an aliased column of the model", {
+  set.seed(3)
+  d <- data.frame(x1 = runif(300, -3, 3))
+  d$y <- rbinom(300, 1, plogis(0.5 * d$x1)); d$x2 <- 2 * d$x1
+  rd <- glm(y ~ x1 + x2, family = binomial(), data = d)             # the coefficient of x2 is NA
+  fr <- glm(y ~ x1, family = binomial(), data = d)
+  expect_true(is.na(coef(rd)[["x2"]]))
+  for (f in c("joint", "lr")) {
+    a <- run.all.gof(rd, tests = "Stukel", control = list(Stukel = list(form = f)))
+    b <- run.all.gof(fr, tests = "Stukel", control = list(Stukel = list(form = f)))
+    expect_true(is.finite(a$p_value))
+    expect_equal(a$Statistic, b$Statistic, tolerance = 1e-8)
+    expect_equal(a$df, 2)
+  }
+  expect_equal(run.all.gof(fr, tests = "Stukel")$Statistic, 0.3785754, tolerance = 1e-5)
+})
+
+test_that("the joint Stukel form uses the unclamped fitted risks under near separation", {
+  set.seed(14); x <- runif(300, -3, 3); y <- rbinom(300, 1, plogis(6 * x))
+  fit <- suppressWarnings(glm(y ~ x, family = binomial()))
+  p <- fitted(fit)
+  expect_true(any(p < 1e-6 | p > 1 - 1e-6))                          # some risks lie beyond the 1e-6 clamp
+  ## u'I^-1 u, with I from the weighted residuals of Z on X (a QR route, not the package's solve)
+  Z <- stukel_cols(fit); X <- model.matrix(fit); sw <- sqrt(p * (1 - p))
+  u <- colSums(Z * (y - p))
+  I <- crossprod(qr.resid(qr(sw * X), sw * Z))
+  res <- run.all.gof(fit, tests = "Stukel")
+  expect_equal(res$Statistic, drop(crossprod(u, solve(I, u))), tolerance = 1e-8)
+  expect_equal(res$df, 2)
 })

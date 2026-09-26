@@ -398,7 +398,7 @@ optional package is not present are simply skipped.</p>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>battery <span class="ot">&lt;-</span> <span class="fu">run.all.gof</span>(fit, <span class="at">include_slow =</span> <span class="cn">FALSE</span>, <span class="at">install =</span> <span class="st">&quot;no&quot;</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>battery</span>
 <span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt; Goodness-of-fit battery: 21 tests  (16 reject at 0.05)</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt; Goodness-of-fit battery: 22 tests  (17 reject at 0.05)</span></span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt; ========================================================</span></span>
 <span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt;  Test                        Statistic   df  p-value    </span></span>
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;  --- Global --------------------------------------------</span></span>
@@ -424,25 +424,26 @@ optional package is not present are simply skipped.</p>
 <span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a><span class="co">#&gt;  DEF.poly2                       8.299 1.08   0.0036 ** </span></span>
 <span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a><span class="co">#&gt;  DEF.poly3                        8.33 2.07   0.0150 *  </span></span>
 <span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a><span class="co">#&gt;  DEF.stukel                        6.5 1.56   0.0118 *  </span></span>
-<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a><span class="co">#&gt;  Stukel                          14.24    2   0.0008 ***</span></span>
-<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a><span class="co">#&gt;  --- Ensemble ------------------------------------------</span></span>
-<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Vote(3DEF) [d]                      0.0070 ** </span></span>
-<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Univ(3DEF+EF) [d]                   0.0088 ** </span></span>
-<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a><span class="co">#&gt; --------------------------------------------------------</span></span>
-<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a><span class="co">#&gt;  Signif.:  *** &lt;.001   ** &lt;.01   * &lt;.05   . &lt;.1</span></span>
-<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a><span class="co">#&gt;  Notes:</span></span>
-<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a><span class="co">#&gt;    [a] normal reference (thesis)</span></span>
-<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a><span class="co">#&gt;    [b] deviance residuals ~ groups (ANOVA F)</span></span>
-<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a><span class="co">#&gt;    [c] split on categorical: sex, treatment</span></span>
-<span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a><span class="co">#&gt;    [d] Cauchy combination of the directed tests</span></span></code></pre></div>
+<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a><span class="co">#&gt;  DEF.sym                         1.519    1   0.0096 ** </span></span>
+<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a><span class="co">#&gt;  Stukel                          11.58    2   0.0031 ** </span></span>
+<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a><span class="co">#&gt;  --- Ensemble ------------------------------------------</span></span>
+<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Vote(3DEF) [d]                      0.0070 ** </span></span>
+<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Univ(3DEF+EF) [d]                   0.0088 ** </span></span>
+<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a><span class="co">#&gt; --------------------------------------------------------</span></span>
+<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a><span class="co">#&gt;  Signif.:  *** &lt;.001   ** &lt;.01   * &lt;.05   . &lt;.1</span></span>
+<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a><span class="co">#&gt;  Notes:</span></span>
+<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a><span class="co">#&gt;    [a] normal reference (thesis)</span></span>
+<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a><span class="co">#&gt;    [b] deviance residuals ~ groups (ANOVA F)</span></span>
+<span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a><span class="co">#&gt;    [c] split on categorical: sex, treatment</span></span>
+<span id="cb2-42"><a href="#cb2-42" tabindex="-1"></a><span class="co">#&gt;    [d] Cauchy combination of the directed tests</span></span></code></pre></div>
 <p>Read the table by <em>family</em>. The <strong>global
 omnibus</strong> statistics (Pearson, deviance) spread their power over
 hundreds of covariate patterns and tend to <strong>miss</strong> this
 smooth misfit. The <strong>directed</strong> tests —
 <code>DEF.poly2</code>, <code>DEF.poly3</code> (EDGE),
-<code>DEF.stukel</code>, and Stukel’s score test — concentrate their few
-degrees of freedom on the calibration-curve shape and
-<strong>detect</strong> it, as do the EF test and the ensemble. That
+<code>DEF.stukel</code>, <code>DEF.sym</code>, and Stukel’s score test —
+concentrate their few degrees of freedom on the calibration-curve shape
+and <strong>detect</strong> it, as do the EF test and the ensemble. That
 contrast is the whole point of a directed test.</p>
 </div>
 <div id="sparse-or-grouped-let-the-package-show-you-both" class="section level2">
@@ -474,7 +475,7 @@ dropping from 795 to 323:</p>
 <span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
 <span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="fu">run.all.gof</span>(fit_g, <span class="at">include_slow =</span> <span class="cn">FALSE</span>, <span class="at">install =</span> <span class="st">&quot;no&quot;</span>)</span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt; Goodness-of-fit battery: 24 tests  (7 reject at 0.05)</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt; Goodness-of-fit battery: 25 tests  (6 reject at 0.05)</span></span>
 <span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; ========================================================</span></span>
 <span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;  Test                        Statistic   df  p-value    </span></span>
 <span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;  --- Global --------------------------------------------</span></span>
@@ -503,18 +504,19 @@ dropping from 795 to 323:</p>
 <span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt;  DEF.poly2                       3.406 1.08   0.0645 .  </span></span>
 <span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt;  DEF.poly3                       4.657 2.08   0.0974 .  </span></span>
 <span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt;  DEF.stukel                        3.3 1.61   0.0936 .  </span></span>
-<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt;  Stukel                          6.057    2   0.0484 *  </span></span>
-<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt;  --- Ensemble ------------------------------------------</span></span>
-<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Vote(3DEF) [e]                      0.0824 .  </span></span>
-<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Univ(3DEF+EF) [e]                   0.0924 .  </span></span>
-<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt; --------------------------------------------------------</span></span>
-<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt;  Signif.:  *** &lt;.001   ** &lt;.01   * &lt;.05   . &lt;.1</span></span>
-<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt;  Notes:</span></span>
-<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt;    [a] grouped to 328 covariate patterns</span></span>
-<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt;    [b] normal reference (thesis)</span></span>
-<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co">#&gt;    [c] deviance residuals ~ groups (ANOVA F)</span></span>
-<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a><span class="co">#&gt;    [d] split on categorical: age, sex, treatment</span></span>
-<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a><span class="co">#&gt;    [e] Cauchy combination of the directed tests</span></span></code></pre></div>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt;  DEF.sym                        0.9373    1   0.0535 .  </span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt;  Stukel                          4.801    2   0.0907 .  </span></span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt;  --- Ensemble ------------------------------------------</span></span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Vote(3DEF) [e]                      0.0824 .  </span></span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Univ(3DEF+EF) [e]                   0.0924 .  </span></span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt; --------------------------------------------------------</span></span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt;  Signif.:  *** &lt;.001   ** &lt;.01   * &lt;.05   . &lt;.1</span></span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt;  Notes:</span></span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt;    [a] grouped to 328 covariate patterns</span></span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co">#&gt;    [b] normal reference (thesis)</span></span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a><span class="co">#&gt;    [c] deviance residuals ~ groups (ANOVA F)</span></span>
+<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a><span class="co">#&gt;    [d] split on categorical: age, sex, treatment</span></span>
+<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a><span class="co">#&gt;    [e] Cauchy combination of the directed tests</span></span></code></pre></div>
 <p>Same model formula, same test family, opposite verdicts — so handling
 the grouping wrong silently changes conclusions. The package’s answer is
 to never make that choice for you invisibly: both forms are printed side

@@ -31,11 +31,14 @@ run.all.gof(
 \item{tests}{Either \code{"all"} (default) or a character vector of test names
 to run (e.g. \code{c("EF","DEF.poly3","HL")}).}
 
-\item{G}{Integer number of groups passed to the grouping tests (default 10).}
+\item{G}{Integer number of groups passed to the grouping tests (default 10), or
+\code{"auto"} for \code{max(10, round(n / 25))} (see \code{\link{def.gof}}).
+\code{"auto"} is resolved once, so every row, the ensemble rows included, uses
+the same number of groups; the directed rows record it in \code{Note}.}
 
 \item{include_slow}{Logical; when \code{TRUE} (the default) the full battery
 runs, including the slow tests: le Cessie-van Houwelingen smoothing
-(O(n^2)-O(n^3)), the GAM tests, Stute-Zhu, eHL, BAGofT, and GiViTI. Set
+(O(n^2)-O(n^3)), the GAM tests, Stute-Zhu, eHL, BAGofT, Projection, and GiViTI. Set
 \code{FALSE} for a quick run with the fast tests only. A one-time message
 notes this whenever slow tests are included.}
 
@@ -66,13 +69,22 @@ nothing is ever installed, regardless of this setting. See
 \item{control}{Optional named list of per-test options. Recognized entries:
 \code{"Stute-Zhu" = list(B = ...)} (bootstrap replicates);
 \code{GiViTI = list(devel = "internal"/"external")};
-\code{"Lai-Liu-HL" = list(n0 = ..., k = ..., alpha = ...)}; and
+\code{"Lai-Liu-HL" = list(n0 = ..., k = ..., alpha = ...)};
+\code{Stukel = list(form = "joint"/"lr"/"marginal")} (the joint score test by
+default, the likelihood-ratio refit, or the pre-2.8.0 marginal sum);
+\code{DEF.poly2}, \code{DEF.poly3}, \code{DEF.stukel} and \code{DEF.sym}
+\code{= list(weights = "unit"/"score", G = ...)}, where \code{G} may be
+\code{"auto"} (see \code{\link{def.gof}}); and
 \code{BAGofT = list(...)} which forwards to the binary adaptive test --
 \code{nsim} (resampling iterations; default 100), \code{nsplits}, \code{ne}
 (the estimation-split size), and the random-forest partitioner's tuning
 \code{Kmax} (maximum number of adaptive partition cells), \code{ntree},
-\code{nmin}, \code{mtry}, \code{maxnodes}. Example:
-\code{list(BAGofT = list(nsim = 200, Kmax = 8, ntree = 500))}.}
+\code{nmin}, \code{mtry}, \code{maxnodes}, and \code{engine}
+(\code{"auto"}, \code{"fast"} or \code{"package"}; see \code{\link{bagoft.fast}}).
+Example: \code{list(BAGofT = list(nsim = 200, Kmax = 8, ntree = 500))}; and
+\code{Projection = list(B = ..., scale = FALSE, max_n = 3000)} (bootstrap refits,
+standardized covariates, and the sample size above which the row is skipped; see
+\code{\link{projection.gof}}).}
 }
 \value{
 A \code{data.frame} (of class \code{gof_battery}) with columns
@@ -175,16 +187,31 @@ power when the guess is right.
   \item \code{EF}, \code{EF-normal} -- the omnibus Ebrahim-Farrington test,
     with the chi-square and normal references respectively. Built for sparse
     data, where the classical grouped statistics lose their reference.
-  \item \code{DEF.poly2}, \code{DEF.poly3}, \code{DEF.stukel} -- the directed
-    forms, each aiming the test at a smooth departure in the shape of the
-    calibration curve: a quadratic or cubic drift in the linear predictor, or
-    Stukel's asymmetry-and-tail family. Powerful when the misfit resembles the
-    chosen basis, weaker when it does not.
-  \item \code{Stukel} -- a two-degree-of-freedom score test against Stukel's
-    generalized logistic link, which nests the logit and lets the two tails
-    bend independently. It is aimed squarely at link misspecification. Note
-    that the combined two-parameter form does not always hold its nominal
-    level in sparse designs; the one-sided components are better behaved.
+  \item \code{DEF.poly2}, \code{DEF.poly3}, \code{DEF.stukel}, \code{DEF.sym} --
+    the directed forms, each aiming the test at a smooth departure in the shape
+    of the calibration curve: a quadratic or cubic drift in the linear
+    predictor, Stukel's asymmetry-and-tail family, or Stukel's symmetric
+    direction, tails too heavy or too light on both sides. Powerful when the
+    misfit resembles the chosen basis, weaker when it does not. Each row takes
+    \code{weights} and \code{G} through \code{control}, for example
+    \code{control = list(DEF.sym = list(weights = "score", G = "auto"))}; see
+    \code{\link{def.gof}}. On a sample with no event, or no non-event, there is
+    no fitted model; these rows and the \code{Stukel} row are then \code{NA}, and
+    \code{Note} says why.
+  \item \code{Stukel} -- a score test against Stukel's generalized logistic
+    link, which nests the logit and lets the two tails bend independently. It
+    is aimed squarely at link misspecification. The two tail directions are
+    tested jointly on 2 degrees of freedom (1 when every fitted risk lies on
+    one side of one half, which \code{Note} then says). Testing them jointly
+    gives up a little power against one-sided (cloglog-type) departures. Up to
+    2.7.0 this row summed two marginal statistics and was liberal; see NEWS.
+    \code{control = list(Stukel = list(form = "lr"))} gives the likelihood-ratio
+    test for the same two directions, and \code{form = "marginal"} the old sum,
+    for reproducing earlier results only. The likelihood-ratio refit can fail
+    to converge under separation; the row is then \code{NA}, with a note. The
+    joint form leaves out a direction whose information after the fit is below
+    \eqn{10^{-10}} times its information before the fit, as when the fitted logit
+    is constant; when no direction is left the row is \code{NA}, with a note.
 }
 
 \strong{Covariate-space tests} (\code{Family} "Covariate-space"). These partition the covariates themselves
@@ -234,8 +261,21 @@ reference, these build one by simulation.
     tests on the other. Its behaviour depends strongly on how many splits and
     resamples it is given; set them with
     \code{control = list(BAGofT = list(nsim = ...))} and be aware that the
-    published default is far more expensive than a single split. Needs the
-    \pkg{BAGofT} package.
+    published default is far more expensive than a single split. By default
+    the row is computed by \code{\link{bagoft.fast}}, which returns the same
+    p-value as the \pkg{BAGofT} package for the same seed and needs only
+    \pkg{randomForest} (and \pkg{dcov} above five covariates);
+    \code{control = list(BAGofT = list(engine = "package"))} calls
+    \pkg{BAGofT} itself.
+  \item \code{Projection} -- the projection test of Escanciano (2006) as
+    defined for logistic regression by Liu et al. (2024): the cumulative
+    residual process is taken along every direction of the covariate space,
+    not only along the fitted linear predictor as in \code{Stute-Zhu}, so it
+    also sees departures such as an omitted interaction. Model-based
+    bootstrap with \code{B = 1000} refits by default; see
+    \code{\link{projection.gof}}. Its weight matrix costs \eqn{O(n^3)} time and
+    \eqn{O(n^2)} memory, so the row is skipped above \eqn{n = 3000}. Set
+    \code{control = list(Projection = list(B = ..., max_n = ...))}.
 }
 
 \strong{Calibration tests} (\code{Family} "Calibration"). These come from clinical prediction, and ask
@@ -265,7 +305,11 @@ directly whether predicted risks match observed frequencies.
     Cauchy combination is valid without knowing how the members correlate,
     which is what makes pooling dependent tests possible at all. The point is
     to avoid having to guess the departure in advance, at the cost of being
-    slightly less powerful than the single best member would have been.
+    slightly less powerful than the single best member would have been. Both
+    rows always combine the unit form of \code{DEF.poly2}, \code{DEF.poly3} and
+    \code{DEF.stukel} at the battery's \code{G}. When \code{control} gives those
+    rows other \code{weights} or another \code{G}, the ensemble rows do not
+    follow, and their \code{Note} says "unit form".
   \item See also \code{\link{legoft}}, a pretrained combination whose weights
     are fixed offline and ship frozen, so two analysts running it on the same
     data obtain the same p-value.
@@ -273,12 +317,20 @@ directly whether predicted risks match observed frequencies.
 
 \strong{Implementation notes.} \code{Tsiatis} and \code{Xie} cluster the
 covariate space with k-means using a fixed internal seed, so results are
-reproducible and your own random stream is left untouched. Every bundled test
+reproducible and your own random stream is left untouched. The equal-frequency
+groups of \code{HL}, \code{F-test}, \code{EF} and the \code{DEF} rows split tied
+fitted risks by row order, so with many ties (grouped data, or a model on
+discrete covariates) their results can depend on the order of the rows;
+randomising the row order is advised. Every bundled test
 reproduces the implementation used in the original simulation study:
-\code{Osius-Rojek} and \code{Stukel} follow \pkg{LogisticDx}'s
-\code{gof.glm} (Stukel via \code{statmod::glm.scoretest} when \pkg{statmod} is
-installed), \code{Copas-RSS} follows the \pkg{rms} gof residual, and
-\code{HL} follows \code{ResourceSelection::hoslem.test}.
+\code{Osius-Rojek} follows \pkg{LogisticDx}'s \code{gof.glm},
+\code{Copas-RSS} follows the \pkg{rms} gof residual, and
+\code{HL} follows \code{ResourceSelection::hoslem.test}. The exception is
+\code{Stukel}: its default joint score statistic agrees with
+\code{anova(..., test = "Rao")} for the augmented model, up to glm's
+convergence tolerance, and only
+\code{form = "marginal"} reproduces \pkg{LogisticDx} (through
+\code{statmod::glm.scoretest} when \pkg{statmod} is installed).
 
 \strong{Procedures the battery does not select.} Some of the package's own methods are
 not part of the panel and are called directly on the fitted model, their p-values read
@@ -357,14 +409,15 @@ for (g in c(5, 10, 20))
 
 \donttest{
 ## The full battery (include_slow = TRUE by default). The slow tests need the
-## suggested packages mgcv, BAGofT, givitiR and callr; in an interactive
+## suggested packages mgcv, randomForest, givitiR and callr; in an interactive
 ## session run.all.gof() offers to install any that are missing
 ## (install = "ask"). See also gof_install_suggests().
 ## The control= list forwards options to the individual tests; the reductions
 ## here keep the example quick without changing what it demonstrates.
 run.all.gof(fit, install = "no",
             control = list("Stute-Zhu" = list(B = 50),
-                           BAGofT = list(nsim = 20)))
+                           BAGofT = list(nsim = 20),
+                           Projection = list(B = 99)))
 
 ## The GiViTI calibration belt shows WHERE on the risk scale a model drifts,
 ## which a single p-value cannot.
@@ -413,6 +466,14 @@ Stute W, Zhu LX (2002). "Model Checks for Generalized Linear Models."
 \emph{Scandinavian Journal of Statistics}, \strong{29}(3), 535--545.
 \doi{10.1111/1467-9469.00304}
 
+Escanciano JC (2006). "A Consistent Diagnostic Test for Regression Models
+Using Projections." \emph{Econometric Theory}, \strong{22}(6), 1030--1051.
+\doi{10.1017/S0266466606060506}
+
+Liu H, Li X, Chen F, Haerdle W, Liang H (2024). "A Comprehensive Comparison of
+Goodness-of-Fit Tests for Logistic Regression Models." \emph{Statistics and
+Computing}, \strong{34}, 175. \doi{10.1007/s11222-024-10487-5}
+
 Tsiatis AA (1980). "A Note on a Goodness-of-Fit Test for the Logistic
 Regression Model." \emph{Biometrika}, \strong{67}(1), 250--251.
 \doi{10.1093/biomet/67.1.250}
@@ -430,10 +491,6 @@ Nattino G, Finazzi S, Bertolini G (2014). "A New Calibration Test and a
 Reappraisal of the Calibration Belt for the Assessment of Prediction Models
 Based on Dichotomous Outcomes." \emph{Statistics in Medicine}, \strong{33}(14),
 2390--2407. \doi{10.1002/sim.6100}
-
-Zhang J, Ding J, Yang Y (2021). "Is a Classification Procedure Good Enough? A
-Goodness-of-Fit Assessment Tool for Classification Learning." \emph{Journal of
-the American Statistical Association}. \doi{10.1080/01621459.2021.1979010}
 
 
 Pigeon JG, Heyse JF (1999). "An Improved Goodness of Fit Statistic for
@@ -465,10 +522,10 @@ Reappraisal of the Calibration Belt for the Assessment of Prediction Models
 Based on Dichotomous Outcomes." \emph{Statistics in Medicine}, \strong{33}(14),
 2390--2407. \doi{10.1002/sim.6100}
 
-Zhang J, Ding J, Yang Y (2021). "Is a Classification Procedure Good Enough?
+Zhang J, Ding J, Yang Y (2023). "Is a Classification Procedure Good Enough?
 A Goodness-of-Fit Assessment Tool for Classification Learning."
-\emph{Journal of the American Statistical Association}, \strong{118}(541),
-194--206. \doi{10.1080/01621459.2021.1979010}
+\emph{Journal of the American Statistical Association}, \strong{118}(542),
+1115--1125. \doi{10.1080/01621459.2021.1979010}
 
 Liu Y, Xie J (2020). "Cauchy Combination Test: A Powerful Test with Analytic
 p-Value Calculation under Arbitrary Dependency Structures." \emph{Journal of

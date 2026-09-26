@@ -12,7 +12,8 @@ def.ensemble.gof(
   add_ef = FALSE,
   combine = c("cct", "minp", "fisher"),
   G = 10,
-  extra_pvalues = NULL
+  extra_pvalues = NULL,
+  weights = c("unit", "score")
 )
 }
 \arguments{
@@ -25,18 +26,23 @@ def.ensemble.gof(
 \item{X}{Optional design matrix, threaded to \code{\link{def.gof}} for the exact
 calibration (only used with the \code{y}/\code{predicted_probs} form).}
 
-\item{components}{Character vector, a subset of \code{c("poly2","poly3","stukel")}.
-Default is all three.}
+\item{components}{Character vector, a subset of
+\code{c("poly2","poly3","stukel","sym")}. Default is \code{"poly2"},
+\code{"poly3"} and \code{"stukel"}, the three bases EDGES is defined on.}
 
 \item{add_ef}{Logical; if \code{TRUE}, the omnibus EF p-value (\code{\link{ef.gof}})
 is appended to the components. Default \code{FALSE}.}
 
 \item{combine}{One of \code{"cct"} (default), \code{"minp"}, \code{"fisher"}.}
 
-\item{G}{Integer number of groups passed to \code{def.gof}/\code{ef.gof} (default 10).}
+\item{G}{Integer number of groups passed to \code{def.gof}/\code{ef.gof} (default 10),
+or \code{"auto"} for \code{max(10, round(n / 25))} as in \code{\link{def.gof}}.}
 
 \item{extra_pvalues}{Optional named numeric vector of additional p-values to
 include (e.g. a Tsiatis test computed elsewhere). Default \code{NULL}.}
+
+\item{weights}{\code{"unit"} (default) or \code{"score"}, passed to
+\code{\link{def.gof}} for every component.}
 }
 \value{
 A one-row \code{data.frame} with columns \code{Test}, \code{Combiner},
@@ -58,6 +64,9 @@ calibration. The \code{"minp"} (Sidak) and \code{"fisher"} rules assume
 independence and are offered for comparison only; under positive dependence
 \code{"minp"} is conservative and \code{"fisher"} is anti-conservative, so they
 should be calibrated by simulation before use (not done here).
+
+With no event, or no non-event, the model has no maximum-likelihood fit: the
+p-value is \code{NA}, with one warning of class \code{def_degenerate}.
 }
 \examples{
 data("gof_demo", package = "ebrahim.gof")

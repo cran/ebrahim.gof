@@ -22,8 +22,38 @@
 #' estimation-adjusted covariance of the grouped residuals. The p-value uses a
 #' Satterthwaite scaled-\eqn{\chi^2} approximation (default) or Imhof's method
 #' (if the \pkg{CompQuadForm} package is installed). Bases: \code{"poly2"},
-#' \code{"poly3"} (default), \code{"stukel"}; \code{"ensemble"} runs all three and
-#' combines them via \code{\link{def.ensemble.gof}}.
+#' \code{"poly3"} (default), \code{"stukel"}, \code{"sym"}; \code{"ensemble"} runs
+#' \code{"poly2"}, \code{"poly3"} and \code{"stukel"} and combines them via
+#' \code{\link{def.ensemble.gof}}.
+#'
+#' Equal-frequency groups split tied fitted risks by row order. With many ties, as
+#' with grouped data or a model on discrete covariates, the result can therefore
+#' depend on the order of the rows, and randomising the row order is advised.
+#'
+#' With \code{weights = "score"} each column of \eqn{Z} is multiplied by
+#' \eqn{\sqrt{V_g}}, the square root of its group's variance, so that \eqn{Z'r}
+#' becomes \eqn{\sum_g z_g (O_g - E_g)}: for a logit fit, the score for adding the
+#' grouped shape to the model as a step covariate. Its information after adjusting
+#' for the fitted coefficients is \eqn{Z'\Omega Z}, and the statistic
+#' \eqn{u'I^{-1}u} is referred to a \eqn{\chi^2} law on the rank of that
+#' information (the number of columns unless one is redundant), read from it after
+#' scaling to a correlation matrix. For a logit fit this is the Rao score test for
+#' adding the grouped columns, and it agrees with \code{anova(..., test = "Rao")} up
+#' to glm's convergence tolerance; for other links it is a score-type test.
+#' A column whose information after the fit is below \eqn{10^{-10}} times its
+#' information before the fit (\eqn{Z_s'Z_s}, with \eqn{Z_s} the weighted columns)
+#' is one the model already spans, as when the fitted logit is constant. It is
+#' left out, and when no column is left the p-value is \code{NA}, with a warning of
+#' class \code{def_no_information}.
+#' The unit form is the statistic as published;
+#' the score form keeps a shape on the logit scale from losing its signal when the
+#' group variances differ strongly, as they do at high discrimination.
+#'
+#' With fewer events (or fewer non-events) than groups, the grouped reference
+#' distribution is unreliable. The p-value is still returned, with a warning;
+#' a smaller \code{G} avoids it. With no event, or no non-event, the model has no
+#' maximum-likelihood fit, and the p-value is \code{NA}, with a warning of class
+#' \code{def_degenerate}.
 #'
 #' @param object A fitted binary logistic \code{\link[stats]{glm}}, or a binary
 #'   (0/1) response vector \code{y} (then supply \code{predicted_probs}).
@@ -33,15 +63,29 @@
 #'   form: it enables the exact estimation-adjusted (\eqn{\Omega}) calibration
 #'   (logit working weights assumed). Without it the conservative \eqn{\chi^2_k}
 #'   reference is used and a warning is issued. Ignored when \code{object} is a glm.
-#' @param G Integer number of equal-frequency groups (default 10; must be >= 3).
+#' @param G Integer number of equal-frequency groups (default 10; must be >= 3),
+#'   or \code{"auto"} for \code{max(10, round(n / 25))}, the partition rule of the
+#'   EDGE paper.
 #' @param basis One of \code{"poly3"} (default), \code{"poly2"}, \code{"stukel"},
-#'   or \code{"ensemble"}.
+#'   \code{"sym"}, or \code{"ensemble"}. \code{"sym"} is one column,
+#'   \eqn{\eta|\eta|} at the logit \eqn{\eta} of each group's mean fitted risk:
+#'   Stukel's (1988) symmetric direction, aimed at tails that are too heavy or too
+#'   light on both sides, for example a probit or cauchit truth fitted by a logit.
 #' @param method One of \code{"satterthwaite"} (default) or \code{"imhof"}.
+#'   Ignored when \code{weights = "score"}.
+#' @param weights \code{"unit"} (default) is the statistic as published,
+#'   \eqn{S = r'P_Z r} referred to a weighted chi-squared law. \code{"score"}
+#'   multiplies each column by the square root of its group's variance, which for a
+#'   logit fit makes the statistic the score test for adding the grouped shape to
+#'   the model (a score-type test for other links). It is referred to chi-squared on
+#'   the rank of its information matrix, which is the number of columns unless one
+#'   is redundant (see Details).
 #'
 #' @return A one-row \code{data.frame} with columns \code{Test}, \code{Basis},
 #'   \code{Test_Statistic} (the statistic \eqn{S}), \code{df}, \code{Method}, and
-#'   \code{p_value}. When \code{basis = "ensemble"}, the return is that of
-#'   \code{\link{def.ensemble.gof}}.
+#'   \code{p_value}. For \code{weights = "score"}, \code{Method} is \code{"score"}
+#'   and \code{df} is the integer rank the statistic is referred to. When
+#'   \code{basis = "ensemble"}, the return is that of \code{\link{def.ensemble.gof}}.
 #'
 #' @references
 #' Ebrahim EK, El-Kotory A (2026). "A Directional Hosmer-Lemeshow Goodness-of-Fit
@@ -62,7 +106,9 @@
 #'              data = gof_demo, family = binomial())
 #' def.gof(wrong)                       # default poly3 basis
 #' def.gof(wrong, basis = "stukel")     # tail-shape basis
-#' def.gof(wrong, basis = "ensemble")   # combine all three (CCT)
+#' def.gof(wrong, basis = "sym")        # symmetric tail direction, one column
+#' def.gof(wrong, weights = "score")    # score form of the poly3 basis
+#' def.gof(wrong, basis = "ensemble")   # combine poly2, poly3 and stukel (CCT)
 #'
 #' ## give the model the term it was missing, and the same test stands down
 #' right <- glm(outcome ~ poly(age, 2) + bmi + sex + treatment,
@@ -79,17 +125,20 @@
 #' @concept directed test
 #' @export
 def.gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
-                    basis  = c("poly3", "poly2", "stukel", "ensemble"),
-                    method = c("satterthwaite", "imhof")) {
+                    basis   = c("poly3", "poly2", "stukel", "sym", "ensemble"),
+                    method  = c("satterthwaite", "imhof"),
+                    weights = c("unit", "score")) {
 
-  basis  <- match.arg(basis)
-  method <- match.arg(method)
-  if (!is.numeric(G) || length(G) != 1 || G < 3) {
-    stop("'G' must be a single integer >= 3.")
+  basis   <- match.arg(basis)
+  method  <- match.arg(method)
+  weights <- match.arg(weights)
+  if (!identical(G, "auto") && (!is.numeric(G) || length(G) != 1 || G < 3)) {
+    stop("'G' must be a single integer >= 3, or 'auto'.")
   }
 
   if (basis == "ensemble")
-    return(def.ensemble.gof(object, predicted_probs = predicted_probs, X = X, G = G))
+    return(def.ensemble.gof(object, predicted_probs = predicted_probs, X = X, G = G,
+                            weights = weights))
 
   # --- accept either a fitted glm, OR (y, predicted_probs[, X]) ---
   if (inherits(object, "glm")) {
@@ -118,7 +167,16 @@ def.gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
   n <- length(y)
   if (!all(y %in% c(0, 1))) stop("DEF needs a binary (0/1) response.")
   if (length(ph) != n) stop("'object' (y) and 'predicted_probs' lengths differ.")
+  if (identical(G, "auto")) G <- .def_auto_G(n)
   if (G > n) stop("'G' cannot exceed the number of observations.")
+  if (min(sum(y), n - sum(y)) == 0) {                  # no event or no non-event: no fitted model
+    .def_warn_degenerate(sum(y))
+    return(data.frame(Test = "Directed Ebrahim-Farrington", Basis = basis,
+                      Test_Statistic = NA_real_, df = NA_real_,
+                      Method = if (weights == "score") "score" else method,
+                      p_value = NA_real_, stringsAsFactors = FALSE))
+  }
+  if (min(sum(y), n - sum(y)) < G) .def_warn_few_events(sum(y), n, G)
 
   V <- ph * (1 - ph)
   w <- dmu^2 / V
@@ -147,6 +205,37 @@ def.gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
   Z <- Z[, colSums(abs(Z)) > 1e-8, drop = FALSE]
   if (ncol(Z) < 1)
     stop("The chosen basis is degenerate for this fit. Try basis = 'poly3' or a larger G.")
+  # The kept columns are scaled to unit length before any solve. A Stukel half reaching a single
+  # group whose mean risk is a hair above 0.5 is tiny but not zero, and solve() fails on it
+  # unscaled. Both statistics and the eigenvalues do not depend on the column scale.
+  Z <- Z / rep(sqrt(colSums(Z^2)), each = nrow(Z))
+
+  if (weights == "score") {
+    # Score form: each column times sqrt(V_g), so Z'r = sum_g z_g (O_g - E_g), the score for
+    # adding the group-level step covariate to the model. Its information after adjusting for
+    # the fitted coefficients is Z' Omega Z, and u'I^-1 u is chi-square on its rank. The rank is
+    # read from I scaled to a correlation matrix, so the scale of a column does not decide it.
+    # A column the model already spans is left out: its information after the fit is below 1e-10
+    # of its information before the fit, Zs'Zs (every column, when the fitted logit is constant).
+    Zs <- Z * sqrt(Vg)
+    u  <- drop(crossprod(Zs, r))
+    I  <- crossprod(Zs, Omega %*% Zs)
+    d  <- sqrt(pmax(diag(I), 0))
+    ok <- d > 0 & diag(I) > 1e-10 * colSums(Zs^2)
+    k  <- 0L
+    if (any(ok)) {
+      R   <- I[ok, ok, drop = FALSE] / outer(d[ok], d[ok])
+      ev  <- eigen((R + t(R)) / 2, symmetric = TRUE)
+      pos <- ev$values > 1e-8
+      k   <- sum(pos)
+      S   <- sum(drop(crossprod(ev$vectors[, pos, drop = FALSE], u[ok] / d[ok]))^2 / ev$values[pos])
+    } else .def_warn_no_information()
+    return(data.frame(Test = "Directed Ebrahim-Farrington", Basis = basis,
+                      Test_Statistic = if (k > 0L) S else NA_real_,
+                      df = if (k > 0L) k else NA_real_, Method = "score",
+                      p_value = if (k > 0L) stats::pchisq(S, k, lower.tail = FALSE) else NA_real_,
+                      stringsAsFactors = FALSE))
+  }
 
   ZtZ <- crossprod(Z)
   Zr  <- crossprod(Z, r)
@@ -178,8 +267,42 @@ def.gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
     as.matrix(stats::poly(pbar, deg))
   } else {
     e <- stats::qlogis(pbar)
+    if (basis == "sym") return(cbind(e * abs(e)))   # Stukel's symmetric direction (alpha1 = alpha2)
     cbind(e, e^2 * (e >= 0), -e^2 * (e < 0))
   }
+}
+
+# Internal: the number of groups for G = "auto", the partition rule of the EDGE paper.
+.def_auto_G <- function(n) max(10, round(n / 25))
+
+# Internal: warn that the grouped reference is unreliable with fewer events (or non-events)
+# than groups. The warning has its own class, so the battery can put it in Note and the
+# ensemble can raise it once rather than once per basis.
+.def_warn_few_events <- function(ne, n, G) {
+  what <- if (ne <= n - ne) "events" else "non-events"
+  msg  <- sprintf(paste("def.gof: %d %s for G = %s groups; the grouped reference distribution",
+                        "is unreliable with fewer %s than groups."),
+                  as.integer(min(ne, n - ne)), what, format(G), what)
+  warning(structure(class = c("def_few_events", "warning", "condition"),
+                    list(message = msg, call = NULL)))
+}
+
+# Internal: warn that a sample with no event (or no non-event) has no maximum-likelihood fit, so
+# there is no p-value. Its own class lets the battery put it in Note and the ensemble raise it once.
+.def_warn_degenerate <- function(ne) {
+  what <- if (ne == 0) "no events (every response is 0)" else "no non-events (every response is 1)"
+  msg  <- sprintf("def.gof: %s; the model has no maximum-likelihood fit, so there is no p-value.", what)
+  warning(structure(class = c("def_degenerate", "warning", "condition"),
+                    list(message = msg, call = NULL)))
+}
+
+# Internal: warn that no basis column of the score form keeps information after the fit, so it
+# has no p-value. Its own class lets the battery put it in Note.
+.def_warn_no_information <- function() {
+  msg <- paste("def.gof: no basis column has information left after the fit (each is below 1e-10",
+               "of its information before the fit), so the score form has no p-value.")
+  warning(structure(class = c("def_no_information", "warning", "condition"),
+                    list(message = msg, call = NULL)))
 }
 
 # Internal: p-value of S under sum_j lambda_j chi^2_1.

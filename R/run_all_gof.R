@@ -94,16 +94,31 @@
 #'   \item \code{EF}, \code{EF-normal} -- the omnibus Ebrahim-Farrington test,
 #'     with the chi-square and normal references respectively. Built for sparse
 #'     data, where the classical grouped statistics lose their reference.
-#'   \item \code{DEF.poly2}, \code{DEF.poly3}, \code{DEF.stukel} -- the directed
-#'     forms, each aiming the test at a smooth departure in the shape of the
-#'     calibration curve: a quadratic or cubic drift in the linear predictor, or
-#'     Stukel's asymmetry-and-tail family. Powerful when the misfit resembles the
-#'     chosen basis, weaker when it does not.
-#'   \item \code{Stukel} -- a two-degree-of-freedom score test against Stukel's
-#'     generalized logistic link, which nests the logit and lets the two tails
-#'     bend independently. It is aimed squarely at link misspecification. Note
-#'     that the combined two-parameter form does not always hold its nominal
-#'     level in sparse designs; the one-sided components are better behaved.
+#'   \item \code{DEF.poly2}, \code{DEF.poly3}, \code{DEF.stukel}, \code{DEF.sym} --
+#'     the directed forms, each aiming the test at a smooth departure in the shape
+#'     of the calibration curve: a quadratic or cubic drift in the linear
+#'     predictor, Stukel's asymmetry-and-tail family, or Stukel's symmetric
+#'     direction, tails too heavy or too light on both sides. Powerful when the
+#'     misfit resembles the chosen basis, weaker when it does not. Each row takes
+#'     \code{weights} and \code{G} through \code{control}, for example
+#'     \code{control = list(DEF.sym = list(weights = "score", G = "auto"))}; see
+#'     \code{\link{def.gof}}. On a sample with no event, or no non-event, there is
+#'     no fitted model; these rows and the \code{Stukel} row are then \code{NA}, and
+#'     \code{Note} says why.
+#'   \item \code{Stukel} -- a score test against Stukel's generalized logistic
+#'     link, which nests the logit and lets the two tails bend independently. It
+#'     is aimed squarely at link misspecification. The two tail directions are
+#'     tested jointly on 2 degrees of freedom (1 when every fitted risk lies on
+#'     one side of one half, which \code{Note} then says). Testing them jointly
+#'     gives up a little power against one-sided (cloglog-type) departures. Up to
+#'     2.7.0 this row summed two marginal statistics and was liberal; see NEWS.
+#'     \code{control = list(Stukel = list(form = "lr"))} gives the likelihood-ratio
+#'     test for the same two directions, and \code{form = "marginal"} the old sum,
+#'     for reproducing earlier results only. The likelihood-ratio refit can fail
+#'     to converge under separation; the row is then \code{NA}, with a note. The
+#'     joint form leaves out a direction whose information after the fit is below
+#'     \eqn{10^{-10}} times its information before the fit, as when the fitted logit
+#'     is constant; when no direction is left the row is \code{NA}, with a note.
 #' }
 #'
 #' \strong{Covariate-space tests} (\code{Family} "Covariate-space"). These partition the covariates themselves
@@ -153,8 +168,21 @@
 #'     tests on the other. Its behaviour depends strongly on how many splits and
 #'     resamples it is given; set them with
 #'     \code{control = list(BAGofT = list(nsim = ...))} and be aware that the
-#'     published default is far more expensive than a single split. Needs the
-#'     \pkg{BAGofT} package.
+#'     published default is far more expensive than a single split. By default
+#'     the row is computed by \code{\link{bagoft.fast}}, which returns the same
+#'     p-value as the \pkg{BAGofT} package for the same seed and needs only
+#'     \pkg{randomForest} (and \pkg{dcov} above five covariates);
+#'     \code{control = list(BAGofT = list(engine = "package"))} calls
+#'     \pkg{BAGofT} itself.
+#'   \item \code{Projection} -- the projection test of Escanciano (2006) as
+#'     defined for logistic regression by Liu et al. (2024): the cumulative
+#'     residual process is taken along every direction of the covariate space,
+#'     not only along the fitted linear predictor as in \code{Stute-Zhu}, so it
+#'     also sees departures such as an omitted interaction. Model-based
+#'     bootstrap with \code{B = 1000} refits by default; see
+#'     \code{\link{projection.gof}}. Its weight matrix costs \eqn{O(n^3)} time and
+#'     \eqn{O(n^2)} memory, so the row is skipped above \eqn{n = 3000}. Set
+#'     \code{control = list(Projection = list(B = ..., max_n = ...))}.
 #' }
 #'
 #' \strong{Calibration tests} (\code{Family} "Calibration"). These come from clinical prediction, and ask
@@ -184,7 +212,11 @@
 #'     Cauchy combination is valid without knowing how the members correlate,
 #'     which is what makes pooling dependent tests possible at all. The point is
 #'     to avoid having to guess the departure in advance, at the cost of being
-#'     slightly less powerful than the single best member would have been.
+#'     slightly less powerful than the single best member would have been. Both
+#'     rows always combine the unit form of \code{DEF.poly2}, \code{DEF.poly3} and
+#'     \code{DEF.stukel} at the battery's \code{G}. When \code{control} gives those
+#'     rows other \code{weights} or another \code{G}, the ensemble rows do not
+#'     follow, and their \code{Note} says "unit form".
 #'   \item See also \code{\link{legoft}}, a pretrained combination whose weights
 #'     are fixed offline and ship frozen, so two analysts running it on the same
 #'     data obtain the same p-value.
@@ -192,12 +224,20 @@
 #'
 #' \strong{Implementation notes.} \code{Tsiatis} and \code{Xie} cluster the
 #' covariate space with k-means using a fixed internal seed, so results are
-#' reproducible and your own random stream is left untouched. Every bundled test
+#' reproducible and your own random stream is left untouched. The equal-frequency
+#' groups of \code{HL}, \code{F-test}, \code{EF} and the \code{DEF} rows split tied
+#' fitted risks by row order, so with many ties (grouped data, or a model on
+#' discrete covariates) their results can depend on the order of the rows;
+#' randomising the row order is advised. Every bundled test
 #' reproduces the implementation used in the original simulation study:
-#' \code{Osius-Rojek} and \code{Stukel} follow \pkg{LogisticDx}'s
-#' \code{gof.glm} (Stukel via \code{statmod::glm.scoretest} when \pkg{statmod} is
-#' installed), \code{Copas-RSS} follows the \pkg{rms} gof residual, and
-#' \code{HL} follows \code{ResourceSelection::hoslem.test}.
+#' \code{Osius-Rojek} follows \pkg{LogisticDx}'s \code{gof.glm},
+#' \code{Copas-RSS} follows the \pkg{rms} gof residual, and
+#' \code{HL} follows \code{ResourceSelection::hoslem.test}. The exception is
+#' \code{Stukel}: its default joint score statistic agrees with
+#' \code{anova(..., test = "Rao")} for the augmented model, up to glm's
+#' convergence tolerance, and only
+#' \code{form = "marginal"} reproduces \pkg{LogisticDx} (through
+#' \code{statmod::glm.scoretest} when \pkg{statmod} is installed).
 #'
 #' \strong{Procedures the battery does not select.} Some of the package's own methods are
 #' not part of the panel and are called directly on the fitted model, their p-values read
@@ -217,10 +257,13 @@
 #'   \code{(y, predicted_probs)} form.
 #' @param tests Either \code{"all"} (default) or a character vector of test names
 #'   to run (e.g. \code{c("EF","DEF.poly3","HL")}).
-#' @param G Integer number of groups passed to the grouping tests (default 10).
+#' @param G Integer number of groups passed to the grouping tests (default 10), or
+#'   \code{"auto"} for \code{max(10, round(n / 25))} (see \code{\link{def.gof}}).
+#'   \code{"auto"} is resolved once, so every row, the ensemble rows included, uses
+#'   the same number of groups; the directed rows record it in \code{Note}.
 #' @param include_slow Logical; when \code{TRUE} (the default) the full battery
 #'   runs, including the slow tests: le Cessie-van Houwelingen smoothing
-#'   (O(n^2)-O(n^3)), the GAM tests, Stute-Zhu, eHL, BAGofT, and GiViTI. Set
+#'   (O(n^2)-O(n^3)), the GAM tests, Stute-Zhu, eHL, BAGofT, Projection, and GiViTI. Set
 #'   \code{FALSE} for a quick run with the fast tests only. A one-time message
 #'   notes this whenever slow tests are included.
 #' @param parallel Logical; when \code{TRUE}, the resampling loops of the slow
@@ -246,13 +289,22 @@
 #' @param control Optional named list of per-test options. Recognized entries:
 #'   \code{"Stute-Zhu" = list(B = ...)} (bootstrap replicates);
 #'   \code{GiViTI = list(devel = "internal"/"external")};
-#'   \code{"Lai-Liu-HL" = list(n0 = ..., k = ..., alpha = ...)}; and
+#'   \code{"Lai-Liu-HL" = list(n0 = ..., k = ..., alpha = ...)};
+#'   \code{Stukel = list(form = "joint"/"lr"/"marginal")} (the joint score test by
+#'   default, the likelihood-ratio refit, or the pre-2.8.0 marginal sum);
+#'   \code{DEF.poly2}, \code{DEF.poly3}, \code{DEF.stukel} and \code{DEF.sym}
+#'   \code{= list(weights = "unit"/"score", G = ...)}, where \code{G} may be
+#'   \code{"auto"} (see \code{\link{def.gof}}); and
 #'   \code{BAGofT = list(...)} which forwards to the binary adaptive test --
 #'   \code{nsim} (resampling iterations; default 100), \code{nsplits}, \code{ne}
 #'   (the estimation-split size), and the random-forest partitioner's tuning
 #'   \code{Kmax} (maximum number of adaptive partition cells), \code{ntree},
-#'   \code{nmin}, \code{mtry}, \code{maxnodes}. Example:
-#'   \code{list(BAGofT = list(nsim = 200, Kmax = 8, ntree = 500))}.
+#'   \code{nmin}, \code{mtry}, \code{maxnodes}, and \code{engine}
+#'   (\code{"auto"}, \code{"fast"} or \code{"package"}; see \code{\link{bagoft.fast}}).
+#'   Example: \code{list(BAGofT = list(nsim = 200, Kmax = 8, ntree = 500))}; and
+#'   \code{Projection = list(B = ..., scale = FALSE, max_n = 3000)} (bootstrap refits,
+#'   standardized covariates, and the sample size above which the row is skipped; see
+#'   \code{\link{projection.gof}}).
 #'
 #' @return A \code{data.frame} (of class \code{gof_battery}) with columns
 #'   \code{Test}, \code{Family}, \code{Statistic}, \code{df}, \code{p_value},
@@ -299,14 +351,15 @@
 #'
 #' \donttest{
 #' ## The full battery (include_slow = TRUE by default). The slow tests need the
-#' ## suggested packages mgcv, BAGofT, givitiR and callr; in an interactive
+#' ## suggested packages mgcv, randomForest, givitiR and callr; in an interactive
 #' ## session run.all.gof() offers to install any that are missing
 #' ## (install = "ask"). See also gof_install_suggests().
 #' ## The control= list forwards options to the individual tests; the reductions
 #' ## here keep the example quick without changing what it demonstrates.
 #' run.all.gof(fit, install = "no",
 #'             control = list("Stute-Zhu" = list(B = 50),
-#'                            BAGofT = list(nsim = 20)))
+#'                            BAGofT = list(nsim = 20),
+#'                            Projection = list(B = 99)))
 #'
 #' ## The GiViTI calibration belt shows WHERE on the risk scale a model drifts,
 #' ## which a single p-value cannot.
@@ -385,6 +438,14 @@
 #' \emph{Scandinavian Journal of Statistics}, \strong{29}(3), 535--545.
 #' \doi{10.1111/1467-9469.00304}
 #'
+#' Escanciano JC (2006). "A Consistent Diagnostic Test for Regression Models
+#' Using Projections." \emph{Econometric Theory}, \strong{22}(6), 1030--1051.
+#' \doi{10.1017/S0266466606060506}
+#'
+#' Liu H, Li X, Chen F, Haerdle W, Liang H (2024). "A Comprehensive Comparison of
+#' Goodness-of-Fit Tests for Logistic Regression Models." \emph{Statistics and
+#' Computing}, \strong{34}, 175. \doi{10.1007/s11222-024-10487-5}
+#'
 #' Tsiatis AA (1980). "A Note on a Goodness-of-Fit Test for the Logistic
 #' Regression Model." \emph{Biometrika}, \strong{67}(1), 250--251.
 #' \doi{10.1093/biomet/67.1.250}
@@ -402,10 +463,6 @@
 #' Reappraisal of the Calibration Belt for the Assessment of Prediction Models
 #' Based on Dichotomous Outcomes." \emph{Statistics in Medicine}, \strong{33}(14),
 #' 2390--2407. \doi{10.1002/sim.6100}
-#'
-#' Zhang J, Ding J, Yang Y (2021). "Is a Classification Procedure Good Enough? A
-#' Goodness-of-Fit Assessment Tool for Classification Learning." \emph{Journal of
-#' the American Statistical Association}. \doi{10.1080/01621459.2021.1979010}
 #'
 #'
 #' Pigeon JG, Heyse JF (1999). "An Improved Goodness of Fit Statistic for
@@ -437,10 +494,10 @@
 #' Based on Dichotomous Outcomes." \emph{Statistics in Medicine}, \strong{33}(14),
 #' 2390--2407. \doi{10.1002/sim.6100}
 #'
-#' Zhang J, Ding J, Yang Y (2021). "Is a Classification Procedure Good Enough?
+#' Zhang J, Ding J, Yang Y (2023). "Is a Classification Procedure Good Enough?
 #' A Goodness-of-Fit Assessment Tool for Classification Learning."
-#' \emph{Journal of the American Statistical Association}, \strong{118}(541),
-#' 194--206. \doi{10.1080/01621459.2021.1979010}
+#' \emph{Journal of the American Statistical Association}, \strong{118}(542),
+#' 1115--1125. \doi{10.1080/01621459.2021.1979010}
 #'
 #' Liu Y, Xie J (2020). "Cauchy Combination Test: A Powerful Test with Analytic
 #' p-Value Calculation under Arbitrary Dependency Structures." \emph{Journal of
@@ -501,6 +558,8 @@ run.all.gof <- function(object, predicted_probs = NULL, X = NULL,
                         control = list()) {
 
   install <- match.arg(install)
+  if (!identical(G, "auto") && (!is.numeric(G) || length(G) != 1))
+    stop("run.all.gof: 'G' must be a single number or 'auto'.")
   ctx <- .gof_context(object, predicted_probs, X, G = G)
   sel <- if (identical(tests, "all")) names(.GOF_REGISTRY) else intersect(tests, names(.GOF_REGISTRY))
   if (length(sel) == 0) stop("run.all.gof: no known tests selected.")
@@ -535,7 +594,7 @@ run.all.gof <- function(object, predicted_probs = NULL, X = NULL,
   if (isTRUE(include_slow) &&
       any(vapply(sel, function(nm) isTRUE(.GOF_REGISTRY[[nm]]$slow), logical(1))))
     message("run.all.gof: running the full battery, including the slow tests ",
-            "(le-Cessie, the GAM tests, Stute-Zhu, eHL, BAGofT, GiViTI). ",
+            "(le-Cessie, the GAM tests, Stute-Zhu, eHL, BAGofT, Projection, GiViTI). ",
             "For a quick run with the fast tests only, set include_slow = FALSE.")
 
   rows <- list(); skipped_model <- FALSE
@@ -580,12 +639,24 @@ run.all.gof <- function(object, predicted_probs = NULL, X = NULL,
 
   # ensemble rows (only when a model is available and running the full set)
   if (ctx$has_model && identical(tests, "all")) {
-    v3 <- tryCatch(def.ensemble.gof(ctx$model, G = G)$p_value, error = function(e) NA_real_)
-    vu <- tryCatch(def.ensemble.gof(ctx$model, add_ef = TRUE, G = G)$p_value, error = function(e) NA_real_)
+    # a few-events or no-fit warning is already in the Note of the directed rows
+    quiet <- function(expr)
+      withCallingHandlers(expr, def_few_events = function(w) invokeRestart("muffleWarning"),
+                          def_degenerate = function(w) invokeRestart("muffleWarning"))
+    v3 <- tryCatch(quiet(def.ensemble.gof(ctx$model, G = ctx$G))$p_value, error = function(e) NA_real_)
+    vu <- tryCatch(quiet(def.ensemble.gof(ctx$model, add_ef = TRUE, G = ctx$G))$p_value,
+                   error = function(e) NA_real_)
+    # these rows combine the unit form at the battery G; say so when control has moved the
+    # three DEF rows they combine to other weights or another G
+    moved <- any(vapply(control[c("DEF.poly2", "DEF.poly3", "DEF.stukel")], function(o) {
+      g <- if (identical(o$G, "auto")) .def_auto_G(ctx$n) else o$G
+      (!is.null(o$weights) && !identical(o$weights, "unit")) || (!is.null(g) && !isTRUE(all(g == ctx$G)))
+    }, logical(1)))
     out <- rbind(out, data.frame(
       Test = c("Ensemble.Vote(3DEF)", "Ensemble.Univ(3DEF+EF)"), Family = "Ensemble",
       Statistic = NA_real_, df = NA_real_, p_value = c(v3, vu),
-      Note = "Cauchy combination of the directed tests",
+      Note = paste0("Cauchy combination of the directed tests",
+                    if (moved) sprintf("; unit form, G = %s", format(ctx$G))),
       stringsAsFactors = FALSE))
   }
 
@@ -727,7 +798,7 @@ print.gof_battery <- function(x, ...) {
 
 # Build the one context object every test reads from.
 .gof_context <- function(object, predicted_probs = NULL, X = NULL, G = 10) {
-  if (inherits(object, "glm")) {
+  ctx <- if (inherits(object, "glm")) {
     if (object$family$family != "binomial")
       stop("run.all.gof: the model must be a binomial glm.")
     y  <- as.numeric(object$y)
@@ -750,6 +821,11 @@ print.gof_battery <- function(x, ...) {
     list(y = y, ph = ph, X = X, data = NULL, model = NULL, G = G, n = length(y),
          has_model = FALSE, p = if (is.null(X)) NA_integer_ else ncol(X))
   }
+  if (identical(G, "auto")) {                      # resolved once, so every row uses the same G
+    ctx$G <- .def_auto_G(ctx$n)
+    ctx$G_auto <- TRUE
+  }
+  ctx
 }
 
 # Equal-frequency grouping of the predicted probabilities into G groups.
@@ -926,35 +1002,127 @@ gof_ef_normal <- function(ctx, opts = list()) {
 gof_def <- function(ctx, opts = list()) {
   if (!ctx$has_model && is.null(ctx$X))
     return(list(Statistic = NA, df = NA, p_value = NA, Note = "needs a glm model or X"))
-  b <- if (is.null(opts$basis)) "poly3" else opts$basis
-  r <- if (ctx$has_model) def.gof(ctx$model, G = ctx$G, basis = b)
-       else suppressWarnings(def.gof(ctx$y, ctx$ph, X = ctx$X, G = ctx$G, basis = b))
-  list(Statistic = r$Test_Statistic, df = r$df, p_value = r$p_value, Note = "")
+  b  <- if (is.null(opts$basis))   "poly3" else opts$basis
+  wt <- if (is.null(opts$weights)) "unit"  else opts$weights
+  G  <- if (is.null(opts$G)) ctx$G else if (identical(opts$G, "auto")) .def_auto_G(ctx$n) else opts$G
+  few <- NULL                                      # def.gof's few-events and no-fit warnings go to Note
+  keep_few <- function(w) {
+    few <<- c(few, sub("^def.gof: ", "", conditionMessage(w)))
+    invokeRestart("muffleWarning")
+  }
+  r  <- if (ctx$has_model)
+          withCallingHandlers(def.gof(ctx$model, G = G, basis = b, weights = wt), def_few_events = keep_few,
+                              def_degenerate = keep_few, def_no_information = keep_few)
+        else suppressWarnings(withCallingHandlers(
+          def.gof(ctx$y, ctx$ph, X = ctx$X, G = G, basis = b, weights = wt), def_few_events = keep_few,
+          def_degenerate = keep_few, def_no_information = keep_few))
+  auto <- identical(opts$G, "auto") || (is.null(opts$G) && isTRUE(ctx$G_auto))
+  note <- c(if (r$Method == "score") "score form",
+            if (auto) sprintf("G = %d (auto)", as.integer(G)), few)
+  list(Statistic = r$Test_Statistic, df = r$df, p_value = r$p_value,
+       Note = paste(note, collapse = "; "))
 }
 
-# Stukel (1988) two-direction link test, "SstBoth". Matches the thesis simulation
-# (LogisticDx::gof.glm), which uses the Rao SCORE test (statmod::glm.scoretest) on
-# the sign-split squared-logit directions: the two marginal score-z values are
-# squared and summed to a chi-square_2 statistic.
+# Stukel (1988) test against the generalized logistic link. The two directions are the
+# sign-split squared logits of LogisticDx::gof.glm ("SstBoth"): za = eta^2/2 where the
+# fitted risk is at least one half, zb = -eta^2/2 where it is below.
+#
+# form = "joint" (the default from 2.8.0) is u'I^-1 u, with u = Z'(y - p) and I the
+# information of Z after adjusting for the fitted coefficients: the Rao score test for
+# adding both columns, which anova(..., test = "Rao") gives up to glm's convergence
+# tolerance. Aliased columns of X are left out. When no fitted risk lies
+# on one side of one half that column is identically zero, and the test is the 1-df score
+# test on the other; Note says so. A column whose information after the fit is below 1e-10 of
+# its information before the fit is one the model already spans and is also left out.
+#
+# form = "lr" refits the model with the non-zero columns added and refers the drop in
+# deviance to chi-square on the number of columns the refit could estimate. Under separation
+# the refit may not converge, and the row is then NA with a note.
+#
+# form = "marginal" is the statistic of 2.7.0 and earlier, and of LogisticDx: the two
+# marginal score z's squared and summed. Once the model is fitted the two directions are
+# correlated, so the sum is not chi-square(2) and is liberal: for example, a post-fit
+# correlation of about -0.71 in a typical design, and a rejection rate of up to about 7% at
+# the 5% level. It is kept only so that earlier results can be reproduced.
 gof_stukel <- function(ctx, opts = list()) {
+  form <- if (is.null(opts$form)) "joint" else match.arg(opts$form, c("joint", "marginal", "lr"))
   if (!ctx$has_model)
     return(list(Statistic = NA, df = NA, p_value = NA, Note = "needs a glm model"))
   ph  <- ctx$ph; y <- ctx$y; X <- ctx$X
+  if (min(sum(y), length(y) - sum(y)) == 0)        # no maximum-likelihood fit, in any form
+    return(list(Statistic = NA, df = NA, p_value = NA,
+                Note = paste("Not run: no", if (sum(y) == 0) "events" else "non-events",
+                             "in the sample, so the model has no maximum-likelihood fit")))
   eta <- as.numeric(stats::predict(ctx$model, type = "link"))
   za  <- 0.5 * eta^2 * (ph >= 0.5)                 # Stukel direction, p >= 0.5
   zb  <- -0.5 * eta^2 * (ph < 0.5)                 # Stukel direction, p < 0.5
-  if (requireNamespace("statmod", quietly = TRUE)) {
-    # exact match to the thesis simulation (LogisticDx::gof.glm uses glm.scoretest)
-    Z <- abs(statmod::glm.scoretest(ctx$model, cbind(za, zb)))
-    chi <- sum(Z^2)
-  } else {
-    za_z <- .gof_score_z(za, y, ph, X)
-    zb_z <- .gof_score_z(zb, y, ph, X)
-    if (!is.finite(za_z) || !is.finite(zb_z))
-      return(list(Statistic = NA, df = NA, p_value = NA, Note = "score test undefined"))
-    chi <- za_z^2 + zb_z^2
+
+  if (form == "marginal") {                        # the 2.7.0 code, unchanged
+    if (requireNamespace("statmod", quietly = TRUE)) {
+      Z <- abs(statmod::glm.scoretest(ctx$model, cbind(za, zb)))
+      chi <- sum(Z^2)
+    } else {
+      za_z <- .gof_score_z(za, y, ph, X)
+      zb_z <- .gof_score_z(zb, y, ph, X)
+      if (!is.finite(za_z) || !is.finite(zb_z))
+        return(list(Statistic = NA, df = NA, p_value = NA, Note = "score test undefined"))
+      chi <- za_z^2 + zb_z^2
+    }
+    return(list(Statistic = chi, df = 2, p_value = stats::pchisq(chi, 2, lower.tail = FALSE),
+                Note = "marginal sum (LogisticDx SstBoth), not chi-square(2)"))
   }
-  list(Statistic = chi, df = 2, p_value = stats::pchisq(chi, 2, lower.tail = FALSE), Note = "")
+
+  if (!identical(ctx$model$family$link, "logit") || any(ctx$model$prior.weights != 1) ||
+      !all(y %in% c(0, 1)))
+    return(list(Statistic = NA, df = NA, p_value = NA,
+                Note = "Not run: needs an unweighted logit fit to binary data"))
+  Z    <- cbind(za, zb)
+  keep <- colSums(Z != 0) > 0
+  if (!any(keep))
+    return(list(Statistic = NA, df = NA, p_value = NA, Note = "Not run: the linear predictor is zero"))
+  Z    <- Z[, keep, drop = FALSE]
+  side <- if (all(keep)) "" else if (keep[1]) "1 df: no fitted risk below 0.5"
+          else "1 df: no fitted risk at or above 0.5"
+  X    <- X[, !is.na(stats::coef(ctx$model)), drop = FALSE]   # aliased columns carry no information
+
+  if (form == "lr") {
+    off <- if (is.null(ctx$model$offset)) rep(0, length(y)) else ctx$model$offset
+    f1  <- tryCatch(suppressWarnings(stats::glm.fit(cbind(X, Z), y, family = stats::binomial(),
+                                                    offset = off)),
+                    error = function(e) e)
+    if (inherits(f1, "error"))
+      return(list(Statistic = NA, df = NA, p_value = NA,
+                  Note = paste("Not run: augmented fit failed:", conditionMessage(f1))))
+    if (!isTRUE(f1$converged))
+      return(list(Statistic = NA, df = NA, p_value = NA, Note = "Not run: augmented fit did not converge"))
+    k <- f1$rank - ctx$model$rank
+    if (k < 1)
+      return(list(Statistic = NA, df = NA, p_value = NA,
+                  Note = "Not run: the Stukel columns are aliased with the model"))
+    lr <- max(ctx$model$deviance - f1$deviance, 0)
+    return(list(Statistic = lr, df = k, p_value = stats::pchisq(lr, k, lower.tail = FALSE), Note = side))
+  }
+
+  ph  <- as.numeric(stats::fitted(ctx$model))       # unclamped, as the fit itself uses
+  W   <- ph * (1 - ph)
+  u   <- colSums(Z * (y - ph))
+  ok  <- rep(TRUE, ncol(Z))
+  chi <- tryCatch({
+    ZWX <- crossprod(Z, W * X)
+    I   <- crossprod(Z, W * Z) - ZWX %*% solve(crossprod(X, W * X), t(ZWX))
+    # a direction the model already spans is left out: its information after the fit is below
+    # 1e-10 of its information before the fit (every direction, when the fitted logit is constant)
+    ok  <- diag(I) > 1e-10 * colSums(W * Z^2)
+    if (any(ok)) as.numeric(crossprod(u[ok], solve(I[ok, ok, drop = FALSE], u[ok]))) else NA_real_
+  }, error = function(e) NA_real_)
+  if (!isTRUE(any(ok)))
+    return(list(Statistic = NA, df = NA, p_value = NA,
+                Note = "Not run: no Stukel direction has information left after the fit"))
+  if (!is.finite(chi) || chi < 0)
+    return(list(Statistic = NA, df = NA, p_value = NA, Note = "Not run: singular score information"))
+  k <- sum(ok)
+  if (!all(ok)) side <- "1 df: the other Stukel direction has no information left after the fit"
+  list(Statistic = chi, df = k, p_value = stats::pchisq(chi, k, lower.tail = FALSE), Note = side)
 }
 
 # Rao score-test z for adding one column to a fitted binomial glm. Equals
@@ -1333,15 +1501,16 @@ gof_ehl <- function(ctx, opts = list()) {
        Note = "e-value test (reported as p = min(1, 1/e))")
 }
 
-# BAGofT (binary-adaptive GOF test) via the BAGofT package. The random-forest
+# BAGofT (binary-adaptive GOF test). The random-forest
 # partitioner needs at least two predictors; for a single-predictor model we add
 # a constant helper column to the data (not the formula), the workaround
 # documented in Kuss (2002) / the thesis, so the test runs instead of erroring.
+# Two engines give the same p-value for the same seed: "fast" (bagoft.fast's core,
+# needs randomForest, and dcov above five covariates) and "package" (BAGofT itself).
+# The default "auto" takes the fast one when its packages are installed.
 gof_bagoft <- function(ctx, opts = list()) {
   if (!ctx$has_model || is.null(ctx$data))
     return(list(Statistic = NA, df = NA, p_value = NA, Note = "Not applicable: needs a fitted glm"))
-  if (!requireNamespace("BAGofT", quietly = TRUE))
-    return(list(Statistic = NA, df = NA, p_value = NA, Note = "Not run: install the 'BAGofT' package"))
   nsim  <- if (is.null(opts$nsim)) 100L else as.integer(opts$nsim)
   dat   <- ctx$data
   attr(dat, "terms") <- NULL                       # a model.frame's terms attr breaks BAGofT
@@ -1352,6 +1521,34 @@ gof_bagoft <- function(ctx, opts = list()) {
     preds <- c(preds, ".bagoft_const")
     added_const <- TRUE
   }
+  engine <- if (is.null(opts$engine)) "auto" else match.arg(opts$engine, c("auto", "fast", "package"))
+  fast_ok <- requireNamespace("randomForest", quietly = TRUE) &&
+    (length(preds) <= 5L || requireNamespace("dcov", quietly = TRUE))
+  if (identical(engine, "auto"))
+    engine <- if (fast_ok) "fast" else "package"
+  extra <- paste0(if (!is.null(opts$Kmax)) paste0(", Kmax=", opts$Kmax) else "",
+                  if (!is.null(opts$nsplits)) paste0(", nsplits=", opts$nsplits) else "")
+  if (identical(engine, "fast")) {
+    if (!fast_ok)
+      return(list(Statistic = NA, df = NA, p_value = NA,
+                  Note = "Not run: the fast engine needs 'randomForest' (and 'dcov' above five covariates)"))
+    if (!is.null(ctx$model$offset) && any(ctx$model$offset != 0))
+      return(list(Statistic = NA, df = NA, p_value = NA, Note = "Not run: offsets are not supported"))
+    r <- tryCatch(suppressWarnings(.bagoft_core(
+      ctx$X, ctx$y, dat[-1L], link = ctx$model$family$link,
+      nsplits = if (is.null(opts$nsplits)) 100L else as.integer(opts$nsplits),
+      nsim = nsim, ne = opts$ne, ntree = if (is.null(opts$ntree)) 60 else opts$ntree,
+      Kmax = opts$Kmax, nmin = opts$nmin, mtry = opts$mtry, maxnodes = opts$maxnodes)),
+      error = function(e) NULL)
+    if (is.null(r) || is.null(r$p.value))
+      return(list(Statistic = NA, df = NA, p_value = NA, Note = "Not run: BAGofT computation failed"))
+    return(list(Statistic = NA_real_, df = NA_real_, p_value = as.numeric(r$p.value),
+                Note = paste0("adaptive RF partition; nsim=", nsim, extra,
+                              if (added_const) "; constant column added (single predictor)" else "",
+                              "; fast engine")))
+  }
+  if (!requireNamespace("BAGofT", quietly = TRUE))
+    return(list(Statistic = NA, df = NA, p_value = NA, Note = "Not run: install the 'BAGofT' package"))
   link  <- ctx$model$family$link
   # Adaptive random-forest partitioner: pass through any tuning the caller sets
   # via control = list(BAGofT = list(...)). parRF knobs: Kmax (max number of
@@ -1372,11 +1569,10 @@ gof_bagoft <- function(ctx, opts = list()) {
                   error = function(e) NULL))))
   if (is.null(r) || is.null(r$p.value))
     return(list(Statistic = NA, df = NA, p_value = NA, Note = "Not run: BAGofT computation failed"))
-  extra <- paste0(if (!is.null(opts$Kmax)) paste0(", Kmax=", opts$Kmax) else "",
-                  if (!is.null(opts$nsplits)) paste0(", nsplits=", opts$nsplits) else "")
   list(Statistic = NA_real_, df = NA_real_, p_value = as.numeric(r$p.value),
        Note = paste0("adaptive RF partition; nsim=", nsim, extra,
-                     if (added_const) "; constant column added (single predictor)" else ""))
+                     if (added_const) "; constant column added (single predictor)" else "",
+                     "; BAGofT package"))
 }
 
 # McCullagh (1985) exact-conditional-moments standardization of the Pearson
@@ -1603,9 +1799,10 @@ gof_ftest <- function(ctx, opts = list()) {
   "F-test"        = list(fn = gof_ftest,    family = "Partition",    needs_model = FALSE, slow = FALSE),
   "EF"            = list(fn = gof_ef,       family = "Standardized", needs_model = FALSE, slow = FALSE),
   "EF-normal"     = list(fn = gof_ef_normal, family = "Standardized", needs_model = FALSE, slow = FALSE),
-  "DEF.poly2"     = list(fn = function(ctx, opts) gof_def(ctx, list(basis = "poly2")),  family = "Directed", needs_model = TRUE, slow = FALSE),
-  "DEF.poly3"     = list(fn = function(ctx, opts) gof_def(ctx, list(basis = "poly3")),  family = "Directed", needs_model = TRUE, slow = FALSE),
-  "DEF.stukel"    = list(fn = function(ctx, opts) gof_def(ctx, list(basis = "stukel")), family = "Directed", needs_model = TRUE, slow = FALSE),
+  "DEF.poly2"     = list(fn = function(ctx, opts) gof_def(ctx, list(basis = "poly2",  weights = opts$weights, G = opts$G)), family = "Directed", needs_model = TRUE, slow = FALSE),
+  "DEF.poly3"     = list(fn = function(ctx, opts) gof_def(ctx, list(basis = "poly3",  weights = opts$weights, G = opts$G)), family = "Directed", needs_model = TRUE, slow = FALSE),
+  "DEF.stukel"    = list(fn = function(ctx, opts) gof_def(ctx, list(basis = "stukel", weights = opts$weights, G = opts$G)), family = "Directed", needs_model = TRUE, slow = FALSE),
+  "DEF.sym"       = list(fn = function(ctx, opts) gof_def(ctx, list(basis = "sym",    weights = opts$weights, G = opts$G)), family = "Directed", needs_model = TRUE, slow = FALSE),
   "Stukel"        = list(fn = gof_stukel,   family = "Directed",     needs_model = TRUE,  slow = FALSE),
   "Tsiatis"             = list(fn = gof_tsiatis, family = "Covariate-space", needs_model = TRUE, slow = FALSE),
   "Xie"                 = list(fn = gof_xie,     family = "Covariate-space", needs_model = TRUE, slow = FALSE),
@@ -1620,5 +1817,6 @@ gof_ftest <- function(ctx, opts = list()) {
   "GiViTI-external"     = list(fn = function(ctx, opts) gof_giviti(ctx, list(devel = "external")),
                                                        family = "Calibration",  needs_model = FALSE, slow = TRUE),
   "BAGofT"              = list(fn = gof_bagoft,     family = "Bootstrap",      needs_model = TRUE,  slow = TRUE),
-  "Lai-Liu-HL"          = list(fn = gof_lailiu,     family = "Bootstrap",      needs_model = TRUE,  slow = TRUE)
+  "Lai-Liu-HL"          = list(fn = gof_lailiu,     family = "Bootstrap",      needs_model = TRUE,  slow = TRUE),
+  "Projection"          = list(fn = gof_proj,       family = "Bootstrap",      needs_model = TRUE,  slow = TRUE)
 )

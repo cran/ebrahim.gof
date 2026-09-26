@@ -17,20 +17,27 @@
 #' \code{"minp"} is conservative and \code{"fisher"} is anti-conservative, so they
 #' should be calibrated by simulation before use (not done here).
 #'
+#' With no event, or no non-event, the model has no maximum-likelihood fit: the
+#' p-value is \code{NA}, with one warning of class \code{def_degenerate}.
+#'
 #' @param object A fitted binary logistic \code{\link[stats]{glm}}, or a binary
 #'   (0/1) vector \code{y} (then supply \code{predicted_probs}).
 #' @param predicted_probs Numeric predicted probabilities; required when
 #'   \code{object} is a \code{y} vector.
 #' @param X Optional design matrix, threaded to \code{\link{def.gof}} for the exact
 #'   calibration (only used with the \code{y}/\code{predicted_probs} form).
-#' @param components Character vector, a subset of \code{c("poly2","poly3","stukel")}.
-#'   Default is all three.
+#' @param components Character vector, a subset of
+#'   \code{c("poly2","poly3","stukel","sym")}. Default is \code{"poly2"},
+#'   \code{"poly3"} and \code{"stukel"}, the three bases EDGES is defined on.
 #' @param add_ef Logical; if \code{TRUE}, the omnibus EF p-value (\code{\link{ef.gof}})
 #'   is appended to the components. Default \code{FALSE}.
 #' @param combine One of \code{"cct"} (default), \code{"minp"}, \code{"fisher"}.
-#' @param G Integer number of groups passed to \code{def.gof}/\code{ef.gof} (default 10).
+#' @param G Integer number of groups passed to \code{def.gof}/\code{ef.gof} (default 10),
+#'   or \code{"auto"} for \code{max(10, round(n / 25))} as in \code{\link{def.gof}}.
 #' @param extra_pvalues Optional named numeric vector of additional p-values to
 #'   include (e.g. a Tsiatis test computed elsewhere). Default \code{NULL}.
+#' @param weights \code{"unit"} (default) or \code{"score"}, passed to
+#'   \code{\link{def.gof}} for every component.
 #'
 #' @return A one-row \code{data.frame} with columns \code{Test}, \code{Combiner},
 #'   \code{Components}, \code{k}, and \code{p_value}.
@@ -66,16 +73,35 @@ def.ensemble.gof <- function(object, predicted_probs = NULL, X = NULL,
                              add_ef = FALSE,
                              combine = c("cct", "minp", "fisher"),
                              G = 10,
-                             extra_pvalues = NULL) {
+                             extra_pvalues = NULL,
+                             weights = c("unit", "score")) {
 
   combine    <- match.arg(combine)
-  components <- match.arg(components, c("poly2", "poly3", "stukel"), several.ok = TRUE)
+  components <- match.arg(components, c("poly2", "poly3", "stukel", "sym"), several.ok = TRUE)
+  weights    <- match.arg(weights)
+  if (identical(G, "auto"))
+    G <- .def_auto_G(if (inherits(object, "glm")) length(object$y) else length(object))
+
+  # no event or no non-event: there is no fitted model, so no component has a p-value; warn once
+  y0 <- if (inherits(object, "glm")) as.numeric(object$y) else if (is.numeric(object)) as.numeric(object)
+  if (length(y0) && min(sum(y0), length(y0) - sum(y0)) == 0) {
+    .def_warn_degenerate(sum(y0))
+    return(data.frame(Test = "DEF ensemble", Combiner = combine,
+                      Components = paste(c(components, if (isTRUE(add_ef)) "EF"), collapse = "+"),
+                      k = 0L, p_value = NA_real_, stringsAsFactors = FALSE))
+  }
 
   # component DEF p-values (Satterthwaite default); flexible input threaded through.
-  pv <- vapply(components, function(b) {
+  # def.gof's few-events warning is raised once here, not once per basis.
+  few <- NULL
+  pv <- withCallingHandlers(vapply(components, function(b) {
     def.gof(object, predicted_probs = predicted_probs, X = X,
-            G = G, basis = b, method = "satterthwaite")$p_value
-  }, numeric(1))
+            G = G, basis = b, method = "satterthwaite", weights = weights)$p_value
+  }, numeric(1)), def_few_events = function(w) {
+    few <<- w
+    invokeRestart("muffleWarning")
+  })
+  if (!is.null(few)) warning(few)
   names(pv) <- components
 
   if (isTRUE(add_ef)) {
@@ -117,7 +143,7 @@ def.ensemble.gof <- function(object, predicted_probs = NULL, X = NULL,
 #'
 #' @param ... Arguments passed on to \code{\link{def.ensemble.gof}} (e.g.
 #'   \code{object}, \code{predicted_probs}, \code{X}, \code{components},
-#'   \code{add_ef}, \code{combine}, \code{G}, \code{extra_pvalues}).
+#'   \code{add_ef}, \code{combine}, \code{G}, \code{extra_pvalues}, \code{weights}).
 #'
 #' @inherit def.ensemble.gof return references
 #'
