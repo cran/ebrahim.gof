@@ -85,6 +85,15 @@
 #'     no p-value: the statistic is the standardized power and the accept/reject
 #'     decision appears in the \code{Note} column. Tune with
 #'     \code{control = list("Lai-Liu-HL" = list(n0 = ..., k = ...))}.
+#'   \item \code{HL-largeN} -- Nattino, Pennell and Lemeshow's (2020) large-sample
+#'     Hosmer-Lemeshow test. Instead of perfect fit it tests whether the misfit,
+#'     measured by \eqn{\epsilon = \sqrt{\lambda/n}}, exceeds a tolerance \eqn{\epsilon_0}:
+#'     the ordinary statistic is referred to a noncentral \eqn{\chi^2_{G-2}} with
+#'     noncentrality \eqn{\epsilon_0^2 n}. By their convention \eqn{\epsilon_0} is the
+#'     misfit that would be just significant at \code{n0 = 1e6}; change it with
+#'     \code{control = list("HL-largeN" = list(n0 = ...))}. The \code{Note} gives
+#'     \eqn{\epsilon_0} and the estimate \eqn{\hat\epsilon}. Meant for samples in the tens of
+#'     thousands and above; in small samples it is conservative.
 #' }
 #'
 #' \strong{Directed tests} (\code{Family} "Directed"). Rather than asking whether anything is wrong, these
@@ -258,7 +267,7 @@
 #' @param tests Either \code{"all"} (default) or a character vector of test names
 #'   to run (e.g. \code{c("EF","DEF.poly3","HL")}).
 #' @param G Integer number of groups passed to the grouping tests (default 10), or
-#'   \code{"auto"} for \code{max(10, round(n / 25))} (see \code{\link{def.gof}}).
+#'   \code{"auto"} for \code{max(10, ceiling(n / 25))} (see \code{\link{def.gof}}).
 #'   \code{"auto"} is resolved once, so every row, the ensemble rows included, uses
 #'   the same number of groups; the directed rows record it in \code{Note}.
 #' @param include_slow Logical; when \code{TRUE} (the default) the full battery
@@ -952,6 +961,28 @@ gof_hl <- function(ctx, opts = list()) {
                             Note = "too few non-empty groups"))
   list(Statistic = h$stat, df = h$df,
        p_value = stats::pchisq(h$stat, h$df, lower.tail = FALSE), Note = "")
+}
+
+# Nattino, Pennell & Lemeshow (2020, Biometrics 76:549) large-sample Hosmer-Lemeshow test. In large samples
+# the ordinary test rejects any misfit, however small, because its noncentrality grows with n. They test
+# H0: eps <= eps0 instead, where eps = sqrt(lambda / n) does not grow with n, by referring the ordinary
+# statistic to a noncentral chi-square on G - 2 df with noncentrality eps0^2 n. eps0 is the misfit that
+# would be just significant at n0 = 10^6 (their convention): eps0^2 = (qchisq(.95, G - 2) - (G - 2)) / n0.
+# Reproduces their application: C = 25.35, n = 315,828, G = 10 gives p = 0.010 (0.001 for the ordinary test).
+.hl_largeN_p <- function(C, n, df, n0 = 1e6) {
+  eps0_sq <- (stats::qchisq(0.95, df) - df) / n0
+  list(p = stats::pchisq(C, df, ncp = eps0_sq * n, lower.tail = FALSE), eps0 = sqrt(eps0_sq),
+       eps_hat = sqrt(max(C - df, 0) / n))
+}
+
+gof_hl_largeN <- function(ctx, opts = list()) {
+  n0 <- if (is.null(opts$n0)) 1e6 else opts$n0
+  h <- .gof_hl_stat(ctx$y, ctx$ph, .gof_groups_ef(ctx$ph, ctx$G))
+  if (h$df < 1) return(list(Statistic = h$stat, df = h$df, p_value = NA_real_,
+                            Note = "too few non-empty groups"))
+  r <- .hl_largeN_p(h$stat, length(ctx$y), h$df, n0)
+  list(Statistic = h$stat, df = h$df, p_value = r$p,
+       Note = sprintf("H0: eps <= %.2e (n0 = %g); eps_hat = %.2e", r$eps0, n0, r$eps_hat))
 }
 
 gof_hlw <- function(ctx, opts = list()) {
@@ -1794,11 +1825,15 @@ gof_ftest <- function(ctx, opts = list()) {
   "Copas-RSS"           = list(fn = gof_copas,            family = "Standardized", needs_model = TRUE,  slow = FALSE),
   "Information-Matrix" = list(fn = gof_im,  family = "Global",       needs_model = TRUE,  slow = FALSE),
   "HL"            = list(fn = gof_hl,       family = "Partition",    needs_model = FALSE, slow = FALSE),
+  "HL-largeN"     = list(fn = gof_hl_largeN, family = "Partition",   needs_model = FALSE, slow = FALSE),
   "HL-equalwidth" = list(fn = gof_hlw,      family = "Partition",    needs_model = FALSE, slow = FALSE),
   "Pigeon-Heyse"  = list(fn = gof_ph_test,  family = "Partition",    needs_model = FALSE, slow = FALSE),
   "F-test"        = list(fn = gof_ftest,    family = "Partition",    needs_model = FALSE, slow = FALSE),
   "EF"            = list(fn = gof_ef,       family = "Standardized", needs_model = FALSE, slow = FALSE),
   "EF-normal"     = list(fn = gof_ef_normal, family = "Standardized", needs_model = FALSE, slow = FALSE),
+  ## EDGE, the cubic basis, at both partitions of the EDGE paper whatever the battery's G
+  "EDGE"          = list(fn = function(ctx, opts) gof_def(ctx, list(basis = "poly3", weights = opts$weights, G = "auto")), family = "Directed", needs_model = TRUE, slow = FALSE),
+  "EDGE.G10"      = list(fn = function(ctx, opts) gof_def(ctx, list(basis = "poly3", weights = opts$weights, G = 10)), family = "Directed", needs_model = TRUE, slow = FALSE),
   "DEF.poly2"     = list(fn = function(ctx, opts) gof_def(ctx, list(basis = "poly2",  weights = opts$weights, G = opts$G)), family = "Directed", needs_model = TRUE, slow = FALSE),
   "DEF.poly3"     = list(fn = function(ctx, opts) gof_def(ctx, list(basis = "poly3",  weights = opts$weights, G = opts$G)), family = "Directed", needs_model = TRUE, slow = FALSE),
   "DEF.stukel"    = list(fn = function(ctx, opts) gof_def(ctx, list(basis = "stukel", weights = opts$weights, G = opts$G)), family = "Directed", needs_model = TRUE, slow = FALSE),

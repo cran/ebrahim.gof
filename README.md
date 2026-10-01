@@ -113,6 +113,32 @@ ef.gof(y, predicted_probs, G = 10, model = NULL, m = NULL,
 **Returns:**
 A data frame with test name, test statistic, and p-value.
 
+### `run.all.external()` — external validation in one call
+
+For predictions made without the data at hand, such as a published model checked on new patients or
+any machine-learning model scored on a validation set, pass the outcomes and the predicted
+probabilities. Nothing is refitted, so every test uses its external reference.
+
+```r
+run.all.external(y, p, G = 10, X = NULL, include_slow = FALSE)
+```
+
+It returns the directed test in external mode (ten groups and `G = "auto"`), Cox's recalibration test,
+calibration in the large, Spiegelhalter's z, the GiViTI test (external), the Hosmer-Lemeshow statistic on
+chi-squared(G), Stukel's test on the frozen linear predictor, le Cessie's test when `X` is given and
+`include_slow = TRUE`, and the O/E ratio, calibration slope and c-statistic.
+
+### `edge.stream()` — monitoring a deployed model
+
+```r
+s <- edge.stream(p_ref = p_dev, G = 10)   # cut points from the development predictions
+s <- update(s, y_new, p_new)              # each new batch, constant time per patient
+summary(s)                                # the external-mode test on everything seen so far
+```
+
+The result equals the one-shot external test on the same groups. One test at any time is valid; if you
+test after every batch, spend the level over the looks (for example 0.05 / number of looks).
+
 ### `def.gof()` — Directed Ebrahim-Farrington test
 
 Concentrates power on calibration-curve shape directions by projecting the
@@ -122,11 +148,12 @@ grouped residuals onto a small smooth basis.
 def.gof(object, predicted_probs = NULL, X = NULL, G = 10,
         basis = c("poly3", "poly2", "stukel", "sym", "ensemble"),
         method = c("satterthwaite", "imhof"),
-        weights = c("unit", "score"))
+        weights = c("unit", "score"), external = FALSE)
 ```
 
 - `object`: a fitted binary-logistic `glm`, or a 0/1 response vector `y` (then give `predicted_probs`, and `X` to get the exact calibration).
-- `G`: the number of equal-frequency groups (default 10), or `"auto"` for `max(10, round(n / 25))`, the partition rule of the EDGE paper.
+- `external`: `TRUE` checks frozen predictions, as in external validation of a published model on new data: Omega is the identity, a constant column joins the basis, and the statistic is referred to chi-squared on d + 1 degrees of freedom (unit weights only).
+- `G`: the number of equal-frequency groups (default 10), or `"auto"` for `max(10, ceiling(n / 25))`, the partition rule of the EDGE paper.
 - `basis`: `"poly3"` (default), `"poly2"`, `"stukel"`, `"sym"` (one column, eta|eta|, Stukel's symmetric tail direction), or `"ensemble"` (runs poly2, poly3 and stukel and combines them via `def.ensemble.gof()`).
 - `method`: `"satterthwaite"` (default, no extra dependency) or `"imhof"` (exact, needs `CompQuadForm`).
 - `weights`: `"unit"` (default, the published statistic) or `"score"`, which weights each basis column by the square root of its group's variance. For a logit fit this makes the statistic the Rao score test for adding the grouped shape to the model (for other links it is a score-type test). It is referred to chi-squared on the rank of its information matrix, which is the number of columns unless one is redundant.

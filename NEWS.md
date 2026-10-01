@@ -1,3 +1,129 @@
+# ebrahim.gof 2.9.0
+
+## Bug fix
+
+* `deepgof1()` refitted each bootstrap sample by evaluating the model formula on the model frame.
+  For a term that transforms a covariate, such as `log(x)`, `ns(x, 3)` or `poly(x, 2)`, the model
+  frame holds the transformed column and not `x`, so every refit failed, every replicate was scored
+  `+Inf`, and the p-value was 1 whatever the data. The bootstrap now refits on the fitted model's
+  design matrix with `glm.fit()`, which also keeps a spline basis fixed, as a parametric bootstrap
+  under the fitted model requires. For models without such terms the p-value for a given seed is
+  the same as in 2.8.0.
+
+* `deepgof1()` now stops with a clear message for a grouped (`cbind(successes, failures)`) or
+  weighted binomial fit. The bootstrap draws one Bernoulli outcome per row, so such fits were never
+  served correctly.
+
+* `deepgof1()` accepted a probit or complementary log-log `glm` but refitted every bootstrap sample
+  with the logit link, so the p-value was calibrated against the wrong model. The refits now use the
+  fitted model's own family and link. Logit fits are unchanged.
+
+## New function
+
+* `deepgof1.external(y, p, X)` tests frozen predictions: given probabilities for given 0/1 outcomes,
+  from a published risk model checked on new patients or from any model on a validation set. Nothing
+  is refitted, so the Monte Carlo p-value is exactly valid at every sample size. The map lays the
+  residuals out over the covariates, so the test checks calibration within covariate subgroups, and
+  it shows where the predictions are off. Readings as in `deepgof1()`; the default is `"combined"`.
+
+## Change to the default reading
+
+* The axis rule of `deepgof1()` now works on covariates, not on columns of the model matrix. Each
+  covariate is scored by the standard deviation of its terms' total contribution to the linear
+  predictor, and the map is drawn over the ranks of the covariate itself. Up to 2.8.0 the rule scored
+  model-matrix columns, so after a repair such as `ns(x, 3)` it could choose two spline columns of the
+  same covariate and draw a map that shows no other covariate; a factor entered through its dummy
+  columns. For a model whose covariates all enter as one untransformed column the score is |b| * sd,
+  the earlier rule, and the axes, the map and the p-value for a given seed are the same as in 2.8.0.
+  The earlier rule is kept as `reading = "columns"`, for reproducing results.
+
+## Behaviour change
+
+* `edge.gof()` now reports EDGE at two partitions by default, `G = c("auto", 10)`: the default partition,
+  `max(10, ceiling(n / 25))` groups, which has more power, and ten groups, which tolerate more corrupted
+  records. The result has one row per partition and a new `Partition` column; give a single `G` for one row
+  (`edge.gof(fit, G = 10)` reproduces the earlier default). `def.gof()` is unchanged. `run.all.gof()` gains the
+  rows `EDGE` (default partition) and `EDGE.G10` (ten groups), whatever its own `G`.
+
+* A `Role` column marks the first row `"verdict"` and the second `"check"`, so the partition that decides
+  is the one listed first; `G = c(10, "auto")` lets ten groups decide. `edge.gof()` also accepts the
+  outcome as `y =` for frozen predictions, `edge.gof(y = y, predicted_probs = p, external = TRUE)`.
+
+* `G = "auto"` in `edge.gof()`, `def.gof()`, `def.ensemble.gof()` and `run.all.gof()` now uses
+  `max(10, ceiling(n / 25))` groups, the rule as published in the EDGE paper; up to 2.8.0 it used
+  `round(n / 25)`. The number of groups moves by at most one, and only when the fractional part of
+  `n / 25` is between 0 and 0.5 (for example n = 610 now gives 25 groups, not 24). A numeric `G` is
+  unchanged.
+
+## Documentation
+
+* EDGE is now expanded as Efficient Directed Grouped Examination, the name used in the EDGE paper;
+  the function names and results are unchanged.
+
+## New features
+
+* `run.all.gof()` gains `HL-largeN`, the large-sample Hosmer-Lemeshow test of Nattino, Pennell and Lemeshow
+  (2020, Biometrics 76:549). It tests whether the misfit exceeds a tolerance rather than whether the model fits
+  perfectly, by referring the ordinary statistic to a noncentral chi-square on G - 2 df with noncentrality
+  eps0^2 n, eps0 being the misfit just significant at n0 = 10^6 (`control = list("HL-largeN" = list(n0 = ...))`).
+  It reproduces their application (C = 25.35, n = 315,828: p = 0.010).
+
+* `edge.stream()` monitors a deployed model as patients arrive. It keeps four sums per risk group, with
+  cut points fixed in advance from reference predictions (`p_ref`) or given as `breaks`; `update(s, y, p)`
+  adds a batch in constant time per record and `summary(s)` returns the external-mode test without
+  revisiting earlier records. The streamed statistic equals the one-shot `def.gof(..., external = TRUE)`
+  statistic on the same groups, whatever the order or batching of the updates, and keeps its reference
+  when the risk distribution of later patients drifts. Testing after every batch needs the level spent
+  over the looks; the help page says how.
+
+* `run.all.external(y, p)` runs the external-validation tests at once, for predictions made without the
+  data at hand (a published model, or any model, applied to new patients). It needs only the outcomes
+  and the predicted probabilities, refits nothing, and returns the battery format of `run.all.gof()`:
+  the directed test in external mode at ten groups and at `G = "auto"`, Cox's recalibration test (with
+  the calibration intercept and slope), calibration in the large, Spiegelhalter's z, the GiViTI test in
+  external mode, the Hosmer-Lemeshow statistic referred to chi-squared on G, Stukel's terms on the frozen
+  linear predictor, and, given covariates and `include_slow = TRUE`, le Cessie's kernel statistic with
+  Omega = I; plus the O/E ratio, the calibration slope and the c-statistic. `run.all.gof(y, p)` treats
+  the predictions as fitted to `y` and so uses the internal references, which are conservative on
+  frozen predictions.
+
+* `edge.gof()` and `def.gof()` gain `external = FALSE`. With `external = TRUE` the predicted
+  probabilities are taken as frozen, as when a published model is checked on new data: the
+  covariance of the grouped residuals is the identity, a constant column joins the basis because no
+  score equation absorbs the overall level, and the statistic is referred to chi-squared on d + 1
+  degrees of freedom, with no "conservative" warning. Given a glm, its fitted probabilities are the
+  frozen predictions. Only `weights = "unit"` is supported. The default is unchanged.
+
+* `deepgof1(reading = "allpairs")` scores the residual map of every pair of covariates and takes
+  the largest score as its statistic. The same maximum is taken in every bootstrap replicate, so the
+  p-value needs no correction for the choice of pair. The default axis rule reads covariates by their
+  fitted effects, so it can pass over a covariate whose effect is a pure U-shape. The two readings suit
+  different designs. With few covariates the maximum over pairs has more power: on the benchmark of
+  Liu et al. (2024, Statistics and Computing 34:175), whose settings have at most three covariates, with
+  B = 199 and matched level .05, it has power .640 against .580 for the axis rule, and a null rejection
+  rate of .050. With many covariates the maximum pays for the number of pairs: with two active
+  covariates among ten, the axis rule finds the active pair in 93 to 100 per cent of datasets and has
+  more power than the all-pairs reading in all twelve settings studied (.453 against .286 on average).
+
+* `deepgof1(reading = "combined")` computes both from the same bootstrap refits and reports the
+  smaller of their two p-values, calibrated exactly by ranking the observed minimum among the B + 1
+  minima; the two p-values are returned as `components`.
+
+* In the all-pairs and combined readings the maps are drawn over the covariates, as in the axis rule:
+  a covariate that enters as `ns(x, 3)`, `poly(x, 2)` or `I(x^2)` is ranked by `x` itself, and an
+  interaction adds no axis of its own. Transformed covariates are read from the data the model was
+  fitted to, on the rows the fit kept. A factor is one covariate, entered by its level codes. The
+  argument `covariates` restricts the pairs to a chosen set.
+
+* A model with one covariate is now accepted: the map is 36 quantile cells along its ranks, the
+  construction of the benchmark above for its one-covariate setting. The shipped network was trained
+  on two-covariate maps only; on that setting it holds its level (.055) and has power .735 at matched
+  level .05, about .10 below networks trained on this map. Earlier versions stopped with an error.
+
+* The result now also holds `map`, the 6 x 6 map that gave the statistic (rows follow the first
+  axis), and, for the all-pairs and combined readings, `pairs`, the observed score of every pair, so
+  the test says where the misfit lies as well as whether it is there.
+
 # ebrahim.gof 2.8.0
 
 ## Bug fix

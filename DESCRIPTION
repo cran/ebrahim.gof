@@ -1,8 +1,8 @@
 Package: ebrahim.gof
 Type: Package
 Title: Goodness-of-Fit and Calibration Tests for Logistic Regression
-Version: 2.8.0
-Date: 2026-09-26
+Version: 2.9.0
+Date: 2026-10-01
 Authors@R: c(
     person(given = "Ebrahim Khaled", family = "Ebrahim",
            email = "ebrahimkhaled@alexu.edu.eg",
@@ -53,7 +53,7 @@ LazyData: true
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2026-09-26 11:14:44 UTC; ebrah
+Packaged: 2026-10-01 09:18:59 UTC; ebrah
 Author: Ebrahim Khaled Ebrahim [aut, cre] (ORCID:
     <https://orcid.org/0009-0006-7839-8778>),
   Jiawei Zhang [ctb, cph] (author of the BAGofT package code adapted in
@@ -63,4 +63,4 @@ Author: Ebrahim Khaled Ebrahim [aut, cre] (ORCID:
   Yuhong Yang [ctb, cph] (author of the BAGofT package code adapted in
     R/bagoft_fast.R)
 Repository: CRAN
-Date/Publication: 2026-09-26 12:20:02 UTC
+Date/Publication: 2026-10-01 15:40:45 UTC

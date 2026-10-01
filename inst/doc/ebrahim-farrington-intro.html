@@ -12,7 +12,7 @@
 
 <meta name="author" content="Ebrahim Khaled Ebrahim" />
 
-<meta name="date" content="2026-09-26" />
+<meta name="date" content="2026-10-01" />
 
 <title>Introduction to the Ebrahim-Farrington Goodness-of-Fit Test</title>
 
@@ -342,7 +342,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore">Introduction to the Ebrahim-Farrington
 Goodness-of-Fit Test</h1>
 <h4 class="author">Ebrahim Khaled Ebrahim</h4>
-<h4 class="date">2026-09-26</h4>
+<h4 class="date">2026-10-01</h4>
 
 
 
@@ -493,7 +493,7 @@ once.</p>
 test (here the fast battery; the slow tests are shown below):</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">run.all.gof</span>(model, <span class="at">include_slow =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; Goodness-of-fit battery: 22 tests  (0 reject at 0.05)</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; Goodness-of-fit battery: 25 tests  (0 reject at 0.05)</span></span>
 <span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; ========================================================</span></span>
 <span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt;  Test                        Statistic   df  p-value    </span></span>
 <span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt;  --- Global --------------------------------------------</span></span>
@@ -508,29 +508,34 @@ test (here the fast battery; the slow tests are shown below):</p>
 <span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt;  EF-normal [a]                  -1.251    8   0.8945    </span></span>
 <span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt;  --- Partition -----------------------------------------</span></span>
 <span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt;  HL                              2.855    8   0.9431    </span></span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt;  HL-equalwidth                    4.86    8   0.7724    </span></span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt;  Pigeon-Heyse                    2.877    9   0.9690    </span></span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt;  F-test [b]                       1.11    9   0.3536    </span></span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt;  --- Covariate-space -----------------------------------</span></span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt;  Tsiatis                         5.778    9   0.7619    </span></span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt;  Xie                             8.312  8.5   0.4535    </span></span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt;  Pulkstenis-Robinson [c]                           -    </span></span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt;  --- Directed ------------------------------------------</span></span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt;  DEF.poly2                     0.06176 1.08   0.8227    </span></span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt;  DEF.poly3                      0.1334 2.06   0.9395    </span></span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt;  DEF.stukel                     0.3191    2   0.8313    </span></span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt;  DEF.sym                       0.09206    1   0.5782    </span></span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt;  Stukel                        0.02061    2   0.9897    </span></span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt;  --- Ensemble ------------------------------------------</span></span>
-<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Vote(3DEF) [d]                      0.8921    </span></span>
-<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Univ(3DEF+EF) [d]                   0.9070    </span></span>
-<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt; --------------------------------------------------------</span></span>
-<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt;  Signif.:  *** &lt;.001   ** &lt;.01   * &lt;.05   . &lt;.1</span></span>
-<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt;  Notes:</span></span>
-<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt;    [a] normal reference (thesis)</span></span>
-<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt;    [b] deviance residuals ~ groups (ANOVA F)</span></span>
-<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt;    [c] Not applicable: needs a categorical covariate</span></span>
-<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt;    [d] Cauchy combination of the directed tests</span></span></code></pre></div>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt;  HL-largeN [b]                   2.855    8   0.9432    </span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt;  HL-equalwidth                    4.86    8   0.7724    </span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt;  Pigeon-Heyse                    2.877    9   0.9690    </span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt;  F-test [c]                       1.11    9   0.3536    </span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt;  --- Covariate-space -----------------------------------</span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt;  Tsiatis                         5.778    9   0.7619    </span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt;  Xie                             8.312  8.5   0.4535    </span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt;  Pulkstenis-Robinson [d]                           -    </span></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt;  --- Directed ------------------------------------------</span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt;  EDGE [e]                       0.2335 2.02   0.8904    </span></span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt;  EDGE.G10                       0.1334 2.06   0.9395    </span></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt;  DEF.poly2                     0.06176 1.08   0.8227    </span></span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt;  DEF.poly3                      0.1334 2.06   0.9395    </span></span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt;  DEF.stukel                     0.3191    2   0.8313    </span></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt;  DEF.sym                       0.09206    1   0.5782    </span></span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt;  Stukel                        0.02061    2   0.9897    </span></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt;  --- Ensemble ------------------------------------------</span></span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Vote(3DEF) [f]                      0.8921    </span></span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Univ(3DEF+EF) [f]                   0.9070    </span></span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt; --------------------------------------------------------</span></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt;  Signif.:  *** &lt;.001   ** &lt;.01   * &lt;.05   . &lt;.1</span></span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt;  Notes:</span></span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt;    [a] normal reference (thesis)</span></span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#&gt;    [b] H0: eps &lt;= 2.74e-03 (n0 = 1e+06); eps_hat = 0.00e+00</span></span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a><span class="co">#&gt;    [c] deviance residuals ~ groups (ANOVA F)</span></span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a><span class="co">#&gt;    [d] Not applicable: needs a categorical covariate</span></span>
+<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a><span class="co">#&gt;    [e] G = 20 (auto)</span></span>
+<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a><span class="co">#&gt;    [f] Cauchy combination of the directed tests</span></span></code></pre></div>
 <p>Add <code>include_slow = TRUE</code> to also run the opt-in slow
 tests (le Cessie, the GAM-based tests, Stute-Zhu, eHL, BAGofT, and the
 Lai &amp; Liu standardized-power test), or pass

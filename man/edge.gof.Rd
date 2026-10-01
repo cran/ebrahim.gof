@@ -8,10 +8,12 @@ edge.gof(
   object,
   predicted_probs = NULL,
   X = NULL,
-  G = 10,
+  G = c("auto", 10),
   basis = "poly3",
   method = "satterthwaite",
-  weights = "unit"
+  weights = "unit",
+  external = FALSE,
+  y = NULL
 )
 }
 \arguments{
@@ -24,11 +26,11 @@ edge.gof(
 \item{X}{Optional design matrix, used only with the \code{y}/\code{predicted_probs}
 form: it enables the exact estimation-adjusted (\eqn{\Omega}) calibration
 (logit working weights assumed). Without it the conservative \eqn{\chi^2_k}
-reference is used and a warning is issued. Ignored when \code{object} is a glm.}
+reference is used and a warning is issued. Ignored when \code{object} is a glm,
+and ignored (with a warning) when \code{external = TRUE}.}
 
-\item{G}{Integer number of equal-frequency groups (default 10; must be >= 3),
-or \code{"auto"} for \code{max(10, round(n / 25))}, the partition rule of the
-EDGE paper.}
+\item{G}{Number of groups: \code{"auto"}, a number, or a vector of them; the
+default \code{c("auto", 10)} reports both partitions.}
 
 \item{basis}{One of \code{"poly3"} (default), \code{"poly2"}, \code{"stukel"},
 \code{"sym"}, or \code{"ensemble"}. \code{"sym"} is one column,
@@ -46,15 +48,27 @@ logit fit makes the statistic the score test for adding the grouped shape to
 the model (a score-type test for other links). It is referred to chi-squared on
 the rank of its information matrix, which is the number of columns unless one
 is redundant (see Details).}
+
+\item{external}{Logical, default \code{FALSE}. \code{TRUE} treats the predicted
+probabilities as frozen (external validation of a fixed model): \eqn{\Omega = I},
+a constant column joins the basis, and the statistic is referred to
+\eqn{\chi^2} on the number of basis columns (see Details of \code{\link{def.gof}}). Supply \code{y} and
+\code{predicted_probs}, or a glm whose fitted probabilities are then taken as
+frozen. Requires \code{weights = "unit"} and a basis other than
+\code{"ensemble"}; \code{method} is not used.}
+
+\item{y}{Optional alias for \code{object} when frozen predictions are tested:
+\code{edge.gof(y = y, predicted_probs = p, external = TRUE)}.}
 }
 \value{
-A one-row \code{data.frame} with columns \code{Test} (\code{"EDGE"}),
-  \code{Basis}, \code{Test_Statistic}, \code{df}, \code{Method}, and
-  \code{p_value}, as documented in \code{\link{def.gof}}.
+A \code{data.frame} with one row per partition and columns \code{Test}
+  (\code{"EDGE"}), \code{Partition}, \code{Role} (\code{"verdict"} for the first
+  row, \code{"check"} for the second), \code{Basis}, \code{Test_Statistic},
+  \code{df}, \code{Method} and \code{p_value}, as documented in \code{\link{def.gof}}.
 }
 \description{
-\code{edge.gof()} is the primary interface to the EDGE test (Ebrahim Directed
-Goodness-of-fit Evaluation): a grouped, \emph{directed} goodness-of-fit test
+\code{edge.gof()} is the primary interface to the EDGE test (Efficient Directed
+Grouped Examination): a grouped, \emph{directed} goodness-of-fit test
 for binary logistic regression under sparse data. EDGE projects the grouped
 standardized residuals onto a small pre-specified basis of calibration shapes
 (cubic \code{"poly3"} by default) and refers the resulting quadratic form to
@@ -65,16 +79,31 @@ resampling, no tuning.
 \code{\link{def.gof}} (retained for backward compatibility); the returned
 \code{Test} label is \code{"EDGE"}.
 }
+\details{
+\strong{Two partitions, side by side.} By default the test is reported at two
+partitions, as the EDGE paper recommends. The \emph{default partition},
+\code{G = "auto"} (\eqn{\max(10, \lceil n/25 \rceil)} groups), refines with the sample and has
+more power, above all against misfit at the extremes of risk. \emph{Ten groups},
+\code{G = 10}, keep many records in the extreme groups and so tolerate more
+corrupted records, at some cost in power. Choose which one decides in the analysis
+plan, from what is known about how the data were collected, not after seeing the
+results. The first row is marked \code{Role = "verdict"} and the second
+\code{Role = "check"}: with the default \code{G} the default partition decides and
+ten groups are the robustness check; to let ten groups decide, give
+\code{G = c(10, "auto")}. If only the default partition rejects, the signal sits in the
+extreme groups: check those records. Give a single \code{G} to get one row.
+}
 \examples{
 set.seed(1)
 x <- runif(500, -3, 3)
 y <- rbinom(500, 1, plogis(0.6 * x))
 fit <- glm(y ~ x, family = binomial())
-edge.gof(fit)                      # default cubic basis, G = 10
+edge.gof(fit)                      # cubic basis, at the default partition and at ten groups
+edge.gof(fit, G = 10)              # one partition only
 edge.gof(fit, basis = "stukel")    # Stukel-shape basis
 edge.gof(fit, basis = "sym")       # Stukel's symmetric direction, one column
 edge.gof(fit, basis = "sym", weights = "score")   # its score form
-edge.gof(fit, G = "auto")          # G = max(10, round(n / 25)) = 20 here
+edge.gof(fit, G = "auto")          # the default partition alone: max(10, ceiling(n / 25)) = 20 here
 
 }
 \references{
