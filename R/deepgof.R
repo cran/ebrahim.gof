@@ -82,7 +82,7 @@
 ## sorted by the outcome then puts tied rows into cells by their outcome, the bootstrap
 ## outcomes are not sorted, and a correct model can be rejected.
 .dg_map <- function(fit, K = 6L, tb = NULL)
-  .dg_map_core(stats::model.matrix(fit), fit$y, as.numeric(stats::fitted(fit)),
+  .dg_map_core(stats::model.matrix(fit), fit$y, as.numeric(fit$fitted.values),
                stats::coef(fit), K, tb)
 
 ## the same map from a design matrix, outcome, fitted risks and coefficients, so a bootstrap
@@ -200,7 +200,7 @@
 ##            statistics; not offered by deepgof1())
 ## Returns the observed values, the B x 4 matrix of bootstrap values, and the observed maps.
 .dg_engine <- function(fit, B, K, X, mm, tb, score, need = c("axes", "allpairs"), tcols = NULL) {
-  ph <- as.numeric(stats::fitted(fit)); y <- as.numeric(fit$y); n <- length(y)
+  ph <- as.numeric(fit$fitted.values); y <- as.numeric(fit$y); n <- length(y)
   rk <- function(v) {
     if (is.null(tb)) return(rank(v, ties.method = "first"))
     o <- order(v, tb); rr <- integer(n); rr[o] <- seq_len(n); rr
@@ -371,8 +371,9 @@
 #' terms the default reading gives the same p-value as in 2.8.0.
 #'
 #' @references
-#' Ebrahim EK (2026). "DeepGOF-1: A Pretrained Convolutional Goodness-of-Fit Test for
-#' Logistic Regression with a Computable Consistency Certificate." Manuscript under review.
+#' Ebrahim EK, Hussein OAE-A, El-Kotory A (2026). "Where Does a Logistic Risk Model Fail?
+#' An Audited Neural Goodness-of-Fit Test for Model Development and External Validation."
+#' arXiv:2609.29575 [stat.ME]. \doi{10.48550/arXiv.2609.29575}
 #' Reproduction materials and frozen weights: \doi{10.5281/zenodo.22113220}
 #'
 #' Besag, J. and Clifford, P. (1989). Generalized Monte Carlo significance tests.
@@ -452,7 +453,7 @@ deepgof1 <- function(fit, B = 199L, K = 6L, reading = c("axes", "allpairs", "com
   tied <- any(apply(X, 2, anyDuplicated) > 0L)
   tb <- if (tied) sample.int(nrow(mm)) else NULL
 
-  ph  <- as.numeric(stats::fitted(fit))
+  ph  <- as.numeric(fit$fitted.values)
   y   <- as.numeric(fit$y)                       # 0/1, also for a factor or logical response
   itc <- attr(stats::terms(fit), "intercept") > 0L
 
@@ -513,7 +514,7 @@ deepgof1 <- function(fit, B = 199L, K = 6L, reading = c("axes", "allpairs", "com
                  B = B, K = K, reading = reading, axes = axes,
                  map = matrix(map, K, K, byrow = TRUE), pairs = pairs, boot = Sb,
                  method    = "DeepGOF-1: pretrained residual-map goodness-of-fit test",
-                 data.name = deparse(substitute(fit))),
+                 data.name = paste(deparse(substitute(fit)), collapse = " ")),
             class = "deepgof1")
 }
 
@@ -588,6 +589,10 @@ print.deepgof1 <- function(x, ...) {
 #'   advance.
 #' @return An object of class \code{"deepgof1"}, as returned by \code{\link{deepgof1}}.
 #' @references
+#' Ebrahim EK, Hussein OAE-A, El-Kotory A (2026). "Where Does a Logistic Risk Model Fail?
+#' An Audited Neural Goodness-of-Fit Test for Model Development and External Validation."
+#' arXiv:2609.29575 [stat.ME]. \doi{10.48550/arXiv.2609.29575}
+#'
 #' Besag, J. and Clifford, P. (1989). Generalized Monte Carlo significance tests.
 #' \emph{Biometrika}, 76(4), 633--642.
 #'
@@ -607,6 +612,8 @@ print.deepgof1 <- function(x, ...) {
 #' @export
 deepgof1.external <- function(y, p, X, B = 199L, K = 6L, reading = c("combined", "axes", "allpairs"),
                               axes = NULL) {
+  ## the names of the arguments, taken before y and p are overwritten by their numeric copies below
+  dname <- paste(paste(deparse(substitute(y)), collapse = " "), "and", paste(deparse(substitute(p)), collapse = " "))
   reading <- match.arg(reading)
   if (K != deepgof1_weights$K)
     stop("the shipped DeepGOF-1 weights are valid only at K = ", deepgof1_weights$K, call. = FALSE)
@@ -676,7 +683,7 @@ deepgof1.external <- function(y, p, X, B = 199L, K = 6L, reading = c("combined",
                  map = matrix(.dg_cellmap(cells$idx[[show]], y - p, p, K), K, K, byrow = TRUE),
                  pairs = pairs, boot = boot[, if (reading == "allpairs") "allpairs" else "axes"],
                  method = "DeepGOF-1 for frozen predictions: exact Monte Carlo calibration test",
-                 data.name = paste(deparse(substitute(y)), "and", deparse(substitute(p))),
+                 data.name = dname,
                  alternative = "the probabilities are miscalibrated within covariate subgroups"),
             class = "deepgof1")
 }

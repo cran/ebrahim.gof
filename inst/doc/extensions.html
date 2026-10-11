@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Further examples: grouped data, the EF read-out, monitoring and ridge fits</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Further examples: grouped data, the EF
+read-out, monitoring and ridge fits</h1>
+
+
+
+<p>This vignette collects examples that support the paper on
+<code>ebrahim.gof</code> in the <em>Journal of Statistical Software</em>
+but did not fit in its pages. The code is the code of the paper’s
+replication script, with the same seeds, so the numbers below are the
+numbers that script prints. The whole vignette runs in well under a
+minute.</p>
+<p>The examples use the working model for the bundled
+<code>gof_demo</code> data. These data were generated from a logistic
+model with a negative quadratic term in standardized age (see
+<code>?gof_demo</code>). The working model enters age linearly, so it is
+wrong in a smooth way, in one covariate, by design.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;ebrahim.gof&quot;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;gof_demo&quot;</span>, <span class="at">package =</span> <span class="st">&quot;ebrahim.gof&quot;</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">glm</span>(outcome <span class="sc">~</span> age <span class="sc">+</span> bmi <span class="sc">+</span> sex <span class="sc">+</span> treatment, <span class="at">data =</span> gof_demo,</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="at">family =</span> binomial)</span></code></pre></div>
+<div id="sparse-or-grouped-a-constructed-example" class="section level2">
+<h2>1. Sparse or grouped? A constructed example</h2>
+<p>Some statistics, such as the Pearson and deviance statistics and
+McCullagh’s test, can be computed on the records (the sparse form) or on
+the covariate patterns (the grouped form). When patterns repeat, the two
+forms differ, and <code>run.all.gof()</code> reports both. The paper
+shows this on the low-birth-weight data of <code>MASS</code>, where the
+deviance gives p = 0.0550 sparse and p = 0.0235 grouped.</p>
+<p>The data set <code>gof_demo_grouped</code> shows the effect at a
+larger scale. It has the same process, sample size and misspecified
+model as <code>gof_demo</code>, but age is in 10-year bins and body-mass
+index in whole numbers, as such variables often arrive, and the outcome
+was generated from the binned values. (Bins of 5 years were tried first
+and gave no change of verdict.) The 800 records share 328 covariate
+patterns.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;gof_demo_grouped&quot;</span>, <span class="at">package =</span> <span class="st">&quot;ebrahim.gof&quot;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>fit_g <span class="ot">&lt;-</span> <span class="fu">glm</span>(outcome <span class="sc">~</span> age <span class="sc">+</span> bmi <span class="sc">+</span> sex <span class="sc">+</span> treatment,</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">data =</span> gof_demo_grouped, <span class="at">family =</span> binomial)</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="fu">run.all.gof</span>(fit_g, <span class="at">tests =</span> <span class="fu">c</span>(<span class="st">&quot;Pearson&quot;</span>, <span class="st">&quot;Pearson (grouped)&quot;</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="st">&quot;Deviance&quot;</span>, <span class="st">&quot;Deviance (grouped)&quot;</span>, <span class="st">&quot;McCullagh&quot;</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="st">&quot;McCullagh (grouped)&quot;</span>, <span class="st">&quot;Osius-Rojek&quot;</span>))</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt; Goodness-of-fit battery: 7 tests  (1 reject at 0.05)</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt; ====================================================</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt;  Test                     Statistic  df  p-value    </span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt;  --- Global ----------------------------------------</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt;  Pearson [a]                  769.2 795   0.7377    </span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt;  Pearson (grouped) [b]        346.8 323   0.1738    </span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt;  Deviance [a]                 833.7 795   0.1655    </span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt;  Deviance (grouped) [b]       369.5 323   0.0380 *  </span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt;  --- Standardized ----------------------------------</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt;  McCullagh [c]               -1.864       0.9689    </span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt;  McCullagh (grouped) [b]      0.847       0.1985    </span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co">#&gt;  Osius-Rojek [b]             0.9196       0.3578    </span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="co">#&gt; ----------------------------------------------------</span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="co">#&gt;  Signif.:  *** &lt;.001   ** &lt;.01   * &lt;.05   . &lt;.1</span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="co">#&gt;  Notes:</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="co">#&gt;    [a] sparse form; comparison only, not counted</span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="co">#&gt;    [b] grouped to 328 covariate patterns</span></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="co">#&gt;    [c] normal deviate, upper tail</span></span></code></pre></div>
+<p>The two forms are not small variations of each other. The Pearson
+statistic falls from 769.2 on 795 degrees of freedom to 346.8 on 323.
+McCullagh’s statistic moves from z = -1.864 to z = 0.847. The deviance
+changes its verdict, from p = 0.1655 sparse to p = 0.0380 grouped. Data,
+model and test name are the same; only the treatment of the patterns
+differs. Only the grouped forms are counted in the header.</p>
+<p>Where every record is its own pattern, as in <code>gof_demo</code>,
+grouping cannot rescue the Pearson and deviance statistics, and the
+partition, standardized and directed families are the tools. The grouped
+forms matter for replicated but unbalanced patterns, where rounded or
+categorical covariates live. Such data also have tied fitted risks, so
+call <code>set.seed()</code> before the battery: the rows that form risk
+groups break ties at random.</p>
+</div>
+<div id="the-ef-read-out-by-group" class="section level2">
+<h2>2. The EF read-out by group</h2>
+<p><code>ef.gof()</code> returns, besides the test, the terms of each
+risk group in the attribute <code>&quot;groups&quot;</code>: the standardized
+residual <code>r</code>, its weight <code>b</code>, and the directional
+read-out <code>c = b r</code>. Their sum is the removed part
+<code>C = HL - EF</code>. No two records of <code>gof_demo</code> share
+a fitted risk, so the grouping draws nothing at random.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>ef <span class="ot">&lt;-</span> <span class="fu">ef.gof</span>(fit, <span class="at">G =</span> <span class="st">&quot;auto&quot;</span>, <span class="at">reference =</span> <span class="st">&quot;normal&quot;</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>ef</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt;                 Test Test_Statistic df Reference    p_value  G       HL</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt; 1 Ebrahim-Farrington       1.767261 NA    normal 0.03859226 32 42.19486</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt;           C</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt; 1 -1.603209</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>g <span class="ot">&lt;-</span> <span class="fu">attr</span>(ef, <span class="st">&quot;groups&quot;</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="fu">head</span>(g[<span class="fu">order</span>(<span class="fu">abs</span>(g<span class="sc">$</span>c), <span class="at">decreasing =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="fu">c</span>(<span class="st">&quot;group&quot;</span>, <span class="st">&quot;n&quot;</span>, <span class="st">&quot;observed&quot;</span>, <span class="st">&quot;expected&quot;</span>, <span class="st">&quot;pbar&quot;</span>, <span class="st">&quot;c&quot;</span>)], <span class="dv">4</span>)</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;    group  n observed expected       pbar          c</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; 1      1 25        0 1.237513 0.04950053 -0.9479216</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; 4      4 25        0 2.440586 0.09762342 -0.8918152</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; 16    16 25       11 6.043133 0.24172533  0.5587665</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; 13    13 25        2 5.160181 0.20640722 -0.4531319</span></span></code></pre></div>
+<p>With <code>G = &quot;auto&quot;</code> the 32 groups of 25 give z = 1.767 and p
+= 0.0386; this is the <code>EF-normal</code> row of the battery. The
+ten-group EF statistic (the battery’s <code>EF</code> row) is 15.95 on 8
+degrees of freedom (p = 0.0431), against HL = 15.52 on the same
+groups.</p>
+<p>The removed part C is -1.603 here and -0.435 with ten groups. By the
+help page of <code>ef.gof()</code>, C &lt; 0 says that, on balance, the
+model underestimates how fast the risk approaches zero in the low-risk
+groups or one in the high-risk groups. The largest terms <code>c</code>
+are in groups 1 and 4, at the lowest risks, with no events against 1.24
+and 2.44 expected. The largest positive term, group 16, has 11 events
+against 6.04 expected. This agrees with the EDGE curve of
+<code>plot(edge.gof(fit))</code>: the model predicts too high a risk at
+both ends of the risk range and too low a risk in between, the shape a
+missing negative quadratic term produces.</p>
+</div>
+<div id="is-the-link-verdict-real-de-aliasing" class="section level2">
+<h2>3. Is the LINK verdict real? De-aliasing</h2>
+<p>In-sample, <code>localize.gof(fit, B = 199, seed = 1)</code> names
+both <code>LINK</code> and <code>COV</code> for this model (see
+<code>vignette(&quot;ebrahim-gof-toolbox&quot;)</code>). Is <code>LINK</code>
+real? The omitted term is curvature in age, a covariate misfit. But age
+also enters the score, so part of it shows as a bend in the map from
+score to risk. <code>dealias = TRUE</code> removes from the
+<code>LINK</code> bases what the covariates explain.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>loc_d <span class="ot">&lt;-</span> <span class="fu">localize.gof</span>(fit, <span class="at">B =</span> <span class="dv">199</span>, <span class="at">seed =</span> <span class="dv">1</span>, <span class="at">dealias =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>loc_d</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; Localization of misfit: closed testing over orthogonal groups</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; data:     fit (n = 800)</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; setting:  in-sample checking of a fitted logistic model</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; reference: parametric bootstrap, 199 draws</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; LINK de-aliased from: age, bmi</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; p-values by group (alone, and adjusted by closed testing):</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt;       alone adjusted named</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; LINK 0.4000   0.4000      </span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; COV  0.0050   0.0050     *</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; groups named (closed testing) at FWER 0.05: COV</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; recommended update: revise the model; recalibration cannot repair misfit among</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt;   patients who share a score</span></span></code></pre></div>
+<p><code>LINK</code> is no longer named (p = 0.400), <code>COV</code>
+still is, and the update is a revised model, not a recalibration.</p>
+</div>
+<div id="monitoring-a-deployed-model-with-edge.stream" class="section level2">
+<h2>4. Monitoring a deployed model with <code>edge.stream()</code></h2>
+<p><code>edge.stream()</code> keeps the sufficient statistics of the
+EDGE test on fixed risk groups, so each new batch of records costs the
+same, however many came before. Its result equals that of
+<code>edge.gof()</code> on all records so far, up to rounding.</p>
+<p>In this simulation the reference risks of 5000 development records
+fix ten risk groups, and 200 new records arrive each day for 60 days. Up
+to day 30 the outcomes follow the predictions. From day 31 they follow a
+linear predictor 0.7 times the original. Because its mean is -1.5, this
+raises the average risk as well as flattening it, so both the
+calibration intercept and the slope drift. Each day the stream is
+updated with the new records only.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>p_dev <span class="ot">&lt;-</span> <span class="fu">plogis</span>(<span class="fu">rnorm</span>(<span class="dv">5000</span>, <span class="sc">-</span><span class="fl">1.5</span>, <span class="dv">1</span>))</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>s <span class="ot">&lt;-</span> <span class="fu">edge.stream</span>(<span class="at">p_ref =</span> p_dev, <span class="at">G =</span> <span class="dv">10</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>pv_day <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">60</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="cf">for</span> (day <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">60</span>) {</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  lp <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">200</span>, <span class="sc">-</span><span class="fl">1.5</span>, <span class="dv">1</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  yy <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(<span class="dv">200</span>, <span class="dv">1</span>, <span class="fu">plogis</span>(<span class="cf">if</span> (day <span class="sc">&lt;=</span> <span class="dv">30</span>) lp <span class="cf">else</span> <span class="fl">0.7</span> <span class="sc">*</span> lp))</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  s <span class="ot">&lt;-</span> <span class="fu">update</span>(s, yy, <span class="fu">plogis</span>(lp))</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  pv_day[day] <span class="ot">&lt;-</span> <span class="fu">summary</span>(s)<span class="sc">$</span>p_value</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>}</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>s</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt; EDGE stream: 12000 records in 10 groups (smallest 1062), basis poly3</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt;   S = 166.527 on 4 df, p = &lt;2e-16</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="fu">round</span>(pv_day[<span class="fu">c</span>(<span class="dv">30</span>, <span class="dv">31</span>, <span class="dv">32</span>, <span class="dv">33</span>, <span class="dv">35</span>, <span class="dv">40</span>)], <span class="dv">4</span>)</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; [1] 0.3853 0.2096 0.0592 0.0081 0.0001 0.0000</span></span></code></pre></div>
+<p>Up to day 30 every daily p-value is above 0.30. It falls below 0.05
+first on day 33, three days after the drift begins, and is about 6e-35
+on day 60.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>lp10 <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fu">log10</span>(<span class="fu">pmax</span>(pv_day, <span class="fl">1e-300</span>))</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>op <span class="ot">&lt;-</span> <span class="fu">par</span>(<span class="at">mar =</span> <span class="fu">c</span>(<span class="fl">3.6</span>, <span class="fl">3.9</span>, <span class="fl">0.6</span>, <span class="fl">0.6</span>), <span class="at">mgp =</span> <span class="fu">c</span>(<span class="fl">2.4</span>, <span class="fl">0.6</span>, <span class="dv">0</span>), <span class="at">las =</span> <span class="dv">1</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="fu">plot</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">60</span>, lp10, <span class="at">type =</span> <span class="st">&quot;n&quot;</span>, <span class="at">xlab =</span> <span class="st">&quot;Day of deployment&quot;</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">ylab =</span> <span class="st">&quot;-log10 of the p-value to date&quot;</span>, <span class="at">bty =</span> <span class="st">&quot;l&quot;</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="fu">rect</span>(<span class="fl">30.5</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="dv">61</span>, <span class="fu">max</span>(lp10) <span class="sc">*</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="st">&quot;#F2F2F2&quot;</span>, <span class="at">border =</span> <span class="cn">NA</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v =</span> <span class="fl">30.5</span>, <span class="at">lty =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="st">&quot;#D55E00&quot;</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> <span class="sc">-</span><span class="fu">log10</span>(<span class="fl">0.05</span>), <span class="at">lty =</span> <span class="dv">3</span>, <span class="at">col =</span> <span class="st">&quot;grey40&quot;</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="fu">lines</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">60</span>, lp10, <span class="at">type =</span> <span class="st">&quot;s&quot;</span>, <span class="at">lwd =</span> <span class="fl">1.6</span>, <span class="at">col =</span> <span class="st">&quot;#0072B2&quot;</span>)</span></code></pre></div>
+<p><img role="img" aria-label="Daily minus log10 p-value of edge.stream; flat before day 31, rising steeply after it." src="data:image/png;base64,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" alt="Daily minus log10 p-value of edge.stream; flat before day 31, rising steeply after it." /></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">par</span>(op)</span></code></pre></div>
+<p>A single look has the stated level. Looking every day and acting on
+the first rejection, however, inflates the error rate unless the level
+is spent across the looks. The trace is a monitor; a decision rule needs
+a planned schedule of looks.</p>
+</div>
+<div id="a-ridge-fit-shrink.gof-and-calm.gof" class="section level2">
+<h2>5. A ridge fit: <code>shrink.gof()</code> and
+<code>calm.gof()</code></h2>
+<p>Under a ridge penalty the usual chi-square references of grouped
+tests are not only weak but invalid: shrinkage moves the grouped
+residuals even when the model is correct. <code>shrink.gof()</code>
+corrects the Hosmer-Lemeshow and EDGE statistics and refers them to a
+parametric bootstrap; <code>calm.gof()</code> uses the same correction
+with a closed-form reference and one fit.</p>
+<p>The simulated data have n = 400 records and 80 standard normal
+covariates, five of which carry the signal; the logistic model is
+correct.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">4</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">400</span></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>k <span class="ot">&lt;-</span> <span class="dv">80</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>Xr <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(n <span class="sc">*</span> k), n, k)</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>yr <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="dv">1</span>, <span class="fu">plogis</span>(<span class="sc">-</span><span class="fl">0.5</span> <span class="sc">+</span> Xr[, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>] <span class="sc">%*%</span> <span class="fu">rep</span>(<span class="fl">0.5</span>, <span class="dv">5</span>)))</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="fu">sum</span>(yr)</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="co">#&gt; [1] 159</span></span></code></pre></div>
+<p>The penalty is fixed, not tuned, at lambda = 40 on the log-likelihood
+scale, which is 0.1 on the <code>glmnet</code> scale (lambda = n times
+the <code>glmnet</code> value). With <code>uncorrected = TRUE</code>,
+<code>shrink.gof()</code> also prints the p-values of the usual
+references.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">shrink.gof</span>(Xr, yr, <span class="at">lambda =</span> <span class="dv">40</span>, <span class="at">B =</span> <span class="dv">199</span>, <span class="at">seed =</span> <span class="dv">1</span>,</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="at">uncorrected =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt; Shrinkage-corrected Hosmer-Lemeshow test</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; n = 400, p = 80 (p/n = 0.200), lambda = 40, G = 10, B = 199</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt;   SC.HL    S =  11.0232  p = 0.2650  (uncorrected p &lt; 0.0001)</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt;   SC.EDGE  S =   7.2335  p = 0.1250  (uncorrected p &lt; 0.0001)</span></span></code></pre></div>
+<p>On this one sample from a correct model, the uncorrected decile and
+EDGE statistics give p &lt; 0.0001: they reject the shrunk fit, not the
+model. The corrected statistics do not (p = 0.2650 and 0.1250).
+<code>calm.gof()</code> replaces the 199 refits by a closed-form
+reference:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">calm.gof</span>(Xr, yr, <span class="at">lambda =</span> <span class="dv">40</span>, <span class="at">basis =</span> <span class="st">&quot;adaptive&quot;</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co">#&gt; CALM: closed-form goodness of fit for penalized logistic regression</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co">#&gt; lambda = 40 (theory scale) = 0.1 (glmnet scale)</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt; G = 10, p/n = 0.200</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt;   SC.EDGE.adaptive S =   0.089  p = 0.8058  [degree 2, rho_hat 0.76]</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="co">#&gt; SC.EDGE.adaptive is the statistic to prefer; see ?calm.gof for the scope of</span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="co">#&gt; the reference.</span></span></code></pre></div>
+<p>The scale of <code>lambda</code> matters. The same penalty given on
+the <code>glmnet</code> scale gives the same result, while
+<code>lambda = 0.1</code> on the default scale is a penalty 400 times
+weaker and tests another fit:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>a1 <span class="ot">&lt;-</span> <span class="fu">calm.gof</span>(Xr, yr, <span class="at">lambda =</span> <span class="dv">40</span>, <span class="at">basis =</span> <span class="st">&quot;adaptive&quot;</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>a2 <span class="ot">&lt;-</span> <span class="fu">calm.gof</span>(Xr, yr, <span class="at">lambda =</span> <span class="fl">0.1</span>, <span class="at">lambda_scale =</span> <span class="st">&quot;glmnet&quot;</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="at">basis =</span> <span class="st">&quot;adaptive&quot;</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="fu">all.equal</span>(a1, a2)</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>One sample shows how the functions are called, not how they behave
+over repeated samples; the level and power of these tests are studied in
+the author’s preprints cited on <code>?shrink.gof</code> and
+<code>?calm.gof</code>.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -12,7 +12,7 @@
 
 <meta name="author" content="Ebrahim Khaled Ebrahim" />
 
-<meta name="date" content="2026-10-01" />
+<meta name="date" content="2026-10-11" />
 
 <title>Introduction to the Ebrahim-Farrington Goodness-of-Fit Test</title>
 
@@ -342,7 +342,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore">Introduction to the Ebrahim-Farrington
 Goodness-of-Fit Test</h1>
 <h4 class="author">Ebrahim Khaled Ebrahim</h4>
-<h4 class="date">2026-10-01</h4>
+<h4 class="date">2026-10-11</h4>
 
 
 
@@ -401,8 +401,10 @@ test:</p>
 <span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co"># Perform Ebrahim-Farrington test</span></span>
 <span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">ef.gof</span>(y, predicted_probs, <span class="at">G =</span> <span class="dv">10</span>)</span>
 <span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="fu">print</span>(result)</span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;                 Test Test_Statistic   p_value</span></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; 1 Ebrahim-Farrington      -1.250567 0.9344997</span></span></code></pre></div>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;                 Test Test_Statistic df Reference   p_value  G       HL</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; 1 Ebrahim-Farrington       2.997733  8     chisq 0.9344997 10 2.855296</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt;            C</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; 1 -0.1424368</span></span></code></pre></div>
 </div>
 <div id="understanding-the-test-statistic" class="section level2">
 <h2>Understanding the Test Statistic</h2>
@@ -431,9 +433,9 @@ affect the test’s performance:</p>
 <span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="fu">print</span>(results)</span>
 <span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;   Groups   P_value</span></span>
 <span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 1      4 0.7449740</span></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; 2      8 0.3317745</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; 2      8 0.3289867</span></span>
 <span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; 3     10 0.9344997</span></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; 4     15 0.7347885</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; 4     15 0.9707703</span></span>
 <span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; 5     20 0.3532473</span></span></code></pre></div>
 </div>
 <div id="comparison-with-hosmer-lemeshow-test" class="section level2">
@@ -461,7 +463,7 @@ Hosmer-Lemeshow test:</p>
 <span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; Warning: package &#39;ResourceSelection&#39; was built under R version 4.4.3</span></span>
 <span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; ResourceSelection 0.3-6   2023-06-27</span></span>
 <span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt;                         Test   P_value Test_Statistic</span></span>
-<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt;           Ebrahim-Farrington 0.9344997      -1.250567</span></span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt;           Ebrahim-Farrington 0.9344997       2.997733</span></span>
 <span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt; X-squared    Hosmer-Lemeshow 0.9431075       2.855296</span></span></code></pre></div>
 </div>
 <div id="new-in-2.0.0-directed-test-ensemble-and-the-full-battery" class="section level2">
@@ -497,45 +499,51 @@ test (here the fast battery; the slow tests are shown below):</p>
 <span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; ========================================================</span></span>
 <span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt;  Test                        Statistic   df  p-value    </span></span>
 <span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt;  --- Global --------------------------------------------</span></span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt;  Pearson                         500.2  498   0.4640    </span></span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt;  Deviance                        548.4  498   0.0587 .  </span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt;  Pearson [a]                     500.2  498   0.4640    </span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt;  Deviance [a]                    548.4  498   0.0587    </span></span>
 <span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt;  Information-Matrix            0.01797    2   0.9911    </span></span>
 <span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt;  --- Standardized --------------------------------------</span></span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt;  Osius-Rojek                    0.1242        0.9012    </span></span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt;  McCullagh                     0.04384        0.4825    </span></span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt;  Copas-RSS                    0.001485    1   0.9988    </span></span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt;  EF                             -1.251    8   0.9345    </span></span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt;  EF-normal [a]                  -1.251    8   0.8945    </span></span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt;  --- Partition -----------------------------------------</span></span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt;  HL                              2.855    8   0.9431    </span></span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt;  HL-largeN [b]                   2.855    8   0.9432    </span></span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt;  HL-equalwidth                    4.86    8   0.7724    </span></span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt;  Pigeon-Heyse                    2.877    9   0.9690    </span></span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt;  F-test [c]                       1.11    9   0.3536    </span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt;  Osius-Rojek [b]                0.1242        0.9012    </span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt;  McCullagh [c]                 0.04384        0.4825    </span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt;  Copas-RSS [b]                0.001485        0.9988    </span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt;  --- Partition -----------------------------------------</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt;  HL                              2.855    8   0.9431    </span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt;  HL-largeN [d]                   2.855    8   0.9432    </span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt;  HL-equalwidth                    4.86    8   0.7724    </span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt;  Pigeon-Heyse                    2.877    9   0.9690    </span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt;  F-test [e]                       1.11    9   0.3536    </span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt;  EF                              2.998    8   0.9345    </span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt;  EF-normal [f]                  0.2565        0.3988    </span></span>
 <span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt;  --- Covariate-space -----------------------------------</span></span>
 <span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt;  Tsiatis                         5.778    9   0.7619    </span></span>
 <span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt;  Xie                             8.312  8.5   0.4535    </span></span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt;  Pulkstenis-Robinson [d]                           -    </span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt;  Pulkstenis-Robinson [g]                           -    </span></span>
 <span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt;  --- Directed ------------------------------------------</span></span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt;  EDGE [e]                       0.2335 2.02   0.8904    </span></span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt;  EDGE.G10                       0.1334 2.06   0.9395    </span></span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt;  DEF.poly2                     0.06176 1.08   0.8227    </span></span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt;  DEF.poly3                      0.1334 2.06   0.9395    </span></span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt;  DEF.stukel                     0.3191    2   0.8313    </span></span>
-<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt;  DEF.sym                       0.09206    1   0.5782    </span></span>
-<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt;  Stukel                        0.02061    2   0.9897    </span></span>
-<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt;  --- Ensemble ------------------------------------------</span></span>
-<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Vote(3DEF) [f]                      0.8921    </span></span>
-<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Univ(3DEF+EF) [f]                   0.9070    </span></span>
-<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt; --------------------------------------------------------</span></span>
-<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt;  Signif.:  *** &lt;.001   ** &lt;.01   * &lt;.05   . &lt;.1</span></span>
-<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt;  Notes:</span></span>
-<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt;    [a] normal reference (thesis)</span></span>
-<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#&gt;    [b] H0: eps &lt;= 2.74e-03 (n0 = 1e+06); eps_hat = 0.00e+00</span></span>
-<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a><span class="co">#&gt;    [c] deviance residuals ~ groups (ANOVA F)</span></span>
-<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a><span class="co">#&gt;    [d] Not applicable: needs a categorical covariate</span></span>
-<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a><span class="co">#&gt;    [e] G = 20 (auto)</span></span>
-<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a><span class="co">#&gt;    [f] Cauchy combination of the directed tests</span></span></code></pre></div>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt;  EDGE [h]                       0.2335 2.02   0.8904    </span></span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt;  EDGE.G10 [i]                   0.1334 2.06   0.9395    </span></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt;  DEF.poly2 [i]                 0.06176 1.08   0.8227    </span></span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt;  DEF.stukel [i]                 0.3191    2   0.8313    </span></span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt;  DEF.sym [i]                   0.09206    1   0.5782    </span></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt;  Stukel                        0.02061    2   0.9897    </span></span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt;  --- Calibration ---------------------------------------</span></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt;  Cubic-LR [j]                  0.02093    2   0.9896    </span></span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt;  --- Ensemble ------------------------------------------</span></span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Vote(3DEF) [k]                      0.8921    </span></span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt;  Ensemble.Univ(3DEF+EF) [k]                   0.9070    </span></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt; --------------------------------------------------------</span></span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt;  Signif.:  *** &lt;.001   ** &lt;.01   * &lt;.05   . &lt;.1</span></span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt;  Notes:</span></span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#&gt;    [a] sparse form; comparison only, not counted</span></span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a><span class="co">#&gt;    [b] normal deviate, two-sided</span></span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a><span class="co">#&gt;    [c] normal deviate, upper tail</span></span>
+<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a><span class="co">#&gt;    [d] H0: eps &lt;= 2.74e-03 (n0 = 1e+06); eps_hat = 0.00e+00</span></span>
+<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a><span class="co">#&gt;    [e] ANOVA F on deviance residuals; comparison only, not counted</span></span>
+<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a><span class="co">#&gt;    [f] normal reference, many groups (G = 20)</span></span>
+<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a><span class="co">#&gt;    [g] Not applicable: needs a categorical covariate</span></span>
+<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a><span class="co">#&gt;    [h] S/c ~ chi-square(df), Satterthwaite; G = 20 (auto)</span></span>
+<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a><span class="co">#&gt;    [i] S/c ~ chi-square(df), Satterthwaite</span></span>
+<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a><span class="co">#&gt;    [j] eta^2 and eta^3 added to a logit fit on eta</span></span>
+<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a><span class="co">#&gt;    [k] Cauchy combination of the directed tests</span></span></code></pre></div>
 <p>Add <code>include_slow = TRUE</code> to also run the opt-in slow
 tests (le Cessie, the GAM-based tests, Stute-Zhu, eHL, BAGofT, and the
 Lai &amp; Liu standardized-power test), or pass
@@ -623,9 +631,12 @@ fitted-probability grouping but <em>directs</em> the test at
 calibration-curve shapes, which is why it tops the table without losing
 size control.</p>
 <blockquote>
-<p>Note: as of 2.0.0, <code>ef.gof()</code> defaults to the chi-square
-reference (<code>method = &quot;chisq&quot;</code>); use
-<code>method = &quot;normal&quot;</code> for the version 1.0.0 behaviour.</p>
+<p>Note: <code>ef.gof()</code> refers EF to the chi-square on
+<code>G - 2</code> degrees of freedom. With many groups use
+<code>reference = &quot;normal&quot;</code>, the normal reference of the EF paper,
+and prefer groups of about 25 records (<code>G = &quot;auto&quot;</code>). Since
+2.10.0 the groups are equal in size to within one record and tied fitted
+risks are put in random order (call <code>set.seed()</code> first).</p>
 </blockquote>
 </div>
 </div>

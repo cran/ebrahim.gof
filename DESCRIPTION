@@ -1,8 +1,8 @@
 Package: ebrahim.gof
 Type: Package
 Title: Goodness-of-Fit and Calibration Tests for Logistic Regression
-Version: 2.9.0
-Date: 2026-10-01
+Version: 2.10.0
+Date: 2026-10-11
 Authors@R: c(
     person(given = "Ebrahim Khaled", family = "Ebrahim",
            email = "ebrahimkhaled@alexu.edu.eg",
@@ -36,7 +36,14 @@ Description: Provides a unified battery of goodness-of-fit and calibration
     referred either to a prepivoting bootstrap by 'shrink.gof()' or to a
     closed-form reference by 'calm.gof()', which needs a single fit and is
     validated for designs in which the number of predictors is a sizeable
-    fraction of the sample size. For more details see Hosmer (1980)
+    fraction of the sample size. For a model fitted elsewhere, 'run.all.external()'
+    tests frozen predictions on validation data, and 'edge.stream()' updates the
+    'EDGE' test as validation records arrive. 'localize.gof()' and
+    'localize.external()' name which part of the model is wrong (the intercept,
+    the slope, the link or the covariates) with familywise error control. For
+    comparison, the projection test of Liu et al. is implemented as
+    'projection.gof()' and a fast implementation of the adaptive-partition test
+    'BAGofT' as 'bagoft.fast()'. For more details see Hosmer (1980)
     <doi:10.1080/03610928008827941> and Farrington (1996)
     <doi:10.1111/j.2517-6161.1996.tb02086.x>.
 License: GPL-3
@@ -44,7 +51,7 @@ URL: https://ebrahimkhaled.github.io/ebrahim.gof/,
         https://github.com/ebrahimkhaled/ebrahim.gof
 BugReports: https://github.com/ebrahimkhaled/ebrahim.gof/issues
 Depends: R (>= 3.5.0)
-Imports: CompQuadForm, parallel, stats
+Imports: CompQuadForm, graphics, grDevices, parallel, stats
 Suggests: testthat (>= 3.0.0), knitr, rmarkdown, ResourceSelection,
         ggplot2, statmod, mgcv, BAGofT, randomForest, dcov, givitiR,
         callr, TH.data
@@ -53,7 +60,7 @@ LazyData: true
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2026-10-01 09:18:59 UTC; ebrah
+Packaged: 2026-10-11 13:00:28 UTC; ebrah
 Author: Ebrahim Khaled Ebrahim [aut, cre] (ORCID:
     <https://orcid.org/0009-0006-7839-8778>),
   Jiawei Zhang [ctb, cph] (author of the BAGofT package code adapted in
@@ -63,4 +70,4 @@ Author: Ebrahim Khaled Ebrahim [aut, cre] (ORCID:
   Yuhong Yang [ctb, cph] (author of the BAGofT package code adapted in
     R/bagoft_fast.R)
 Repository: CRAN
-Date/Publication: 2026-10-01 15:40:45 UTC
+Date/Publication: 2026-10-11 13:40:37 UTC

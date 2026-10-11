@@ -33,6 +33,11 @@
 #'     intercept is 0 with the slope held at 1: \eqn{(O - E)/\sqrt{\sum p(1-p)}}.
 #'   \item \code{Spiegelhalter-z} [Calibration] -- Spiegelhalter's (1986) \eqn{z} test,
 #'     two-sided.
+#'   \item \code{Osius-Rojek (external)} [Standardized] -- the Pearson statistic
+#'     \eqn{X^2 = \sum (y - p)^2 / \{p(1-p)\}} standardized with its moments under frozen
+#'     predictions, \eqn{E X^2 = n} and \eqn{\mathrm{Var}\, X^2 = \sum (1-2p)^2 / \{p(1-p)\}}
+#'     (Osius and Rojek 1992), two-sided. In-sample, \code{run.all.gof()} uses the
+#'     version that removes the part of the variance taken by the fitted coefficients.
 #'   \item \code{GiViTI} [Calibration] -- the GiViTI calibration test in its external
 #'     mode (Nattino et al. 2014), run in an isolated \pkg{callr} process; needs
 #'     \pkg{givitiR} and \pkg{callr}. When it selects a polynomial of degree one it
@@ -40,7 +45,10 @@
 #'   \item \code{Hosmer-Lemeshow (external)} [Partition] -- \eqn{G} equal-frequency risk
 #'     groups, referred to \eqn{\chi^2_G}.
 #'   \item \code{Stukel (offset)} [Directed] -- Stukel's two terms added to the frozen
-#'     linear predictor, likelihood-ratio \eqn{\chi^2_2}.
+#'     linear predictor, score test at the null referred to \eqn{\chi^2_2} (one degree of
+#'     freedom when no prediction reaches 0.5, so the upper term is empty). The score form
+#'     is used because the likelihood ratio rejects too often when only a few records have
+#'     risks above 0.5, as happens at low event rates.
 #'   \item \code{le Cessie (external)} [Smoothing] -- le Cessie and van Houwelingen's
 #'     kernel statistic over covariate space with \eqn{\Omega = I}; only when \code{X}
 #'     is given and \code{include_slow = TRUE}, because it builds an \eqn{n \times n}
@@ -121,6 +129,11 @@ run.all.external <- function(y, p, G = 10, X = NULL, include_slow = FALSE) {
                    stats::pchisq(zl^2, 1, lower.tail = FALSE), sprintf("O/E = %.3f", sum(y) / sum(p)))
   zs <- sum((y - p) * (1 - 2 * p)) / sqrt(sum((1 - 2 * p)^2 * v))
   rows$spz <- row("Spiegelhalter-z", "Calibration", zs, NA_real_, 2 * stats::pnorm(-abs(zs)), "two-sided z")
+  # Osius-Rojek on frozen predictions: each Pearson term (y - p)^2 / v has mean 1 and
+  # variance (1 - 2p)^2 / v, and no fitted coefficients are projected out
+  zor <- (sum((y - p)^2 / v) - n) / sqrt(sum((1 - 2 * p)^2 / v))
+  rows$or <- row("Osius-Rojek (external)", "Standardized", zor, NA_real_, 2 * stats::pnorm(-abs(zor)),
+                 "two-sided z, record-level Pearson")
   rows$giviti <- gof_giviti(list(y = y, ph = p), list(devel = "external"))
   rows$giviti <- row("GiViTI", "Calibration", rows$giviti$Statistic, rows$giviti$df,
                      rows$giviti$p_value, rows$giviti$Note)
@@ -136,10 +149,21 @@ run.all.external <- function(y, p, G = 10, X = NULL, include_slow = FALSE) {
 
   # --- Stukel's two terms on the frozen linear predictor ---
   rows$stukel <- safe("Stukel (offset)", "Directed", {
-    za <- 0.5 * lp^2 * (lp >= 0); zb <- -0.5 * lp^2 * (lp < 0)
-    f2 <- suppressWarnings(stats::glm(y ~ 0 + za + zb, offset = lp, family = stats::binomial()))
-    S <- dev0 - f2$deviance
-    row("Stukel (offset)", "Directed", S, 2, stats::pchisq(S, 2, lower.tail = FALSE), "terms added to logit(p)")
+    # score test at the null, U' I^-1 U: nothing is fitted, so it does not lean on a
+    # handful of records the way the likelihood ratio does when few risks pass 0.5
+    Z <- cbind(za = 0.5 * lp^2 * (lp >= 0), zb = -0.5 * lp^2 * (lp < 0))
+    Z <- Z[, colSums(Z != 0) > 0, drop = FALSE]                 # a tail with no records carries no term
+    if (ncol(Z) == 0) stop("no records to carry either term")
+    # the statistic does not change when a column is rescaled, so put both on the scale
+    # of their own information first: lp^2 reaches the thousands where v is near zero
+    Z <- sweep(Z, 2, sqrt(colSums(Z^2 * v)), "/")
+    U <- crossprod(Z, y - p)
+    eI <- eigen(crossprod(Z, Z * v), symmetric = TRUE)
+    keep <- eI$values > 1e-10 * max(eI$values)
+    S <- sum(crossprod(eI$vectors[, keep, drop = FALSE], U)^2 / eI$values[keep])
+    k <- sum(keep)
+    row("Stukel (offset)", "Directed", S, k, stats::pchisq(S, k, lower.tail = FALSE),
+        if (k == 2) "score test, terms added to logit(p)" else "score test, one tail has no records")
   })
 
   # --- le Cessie's kernel statistic with Omega = I (optional, O(n^2) memory) ---

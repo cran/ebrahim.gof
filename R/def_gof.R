@@ -45,9 +45,29 @@
 #' is one the model already spans, as when the fitted logit is constant. It is
 #' left out, and when no column is left the p-value is \code{NA}, with a warning of
 #' class \code{def_no_information}.
-#' The unit form is the statistic as published;
-#' the score form keeps a shape on the logit scale from losing its signal when the
-#' group variances differ strongly, as they do at high discrimination.
+#'
+#' \strong{Which weighting to use.} The unit form is the statistic as published and
+#' is the recommended default. Which weighting is better depends on the basis, and
+#' the two bases go opposite ways:
+#' \itemize{
+#'   \item \code{basis = "poly3"} (and the other polynomial bases): use
+#'     \code{weights = "unit"}. Over the 32 power scenarios of the EDGE paper the
+#'     score form was behind in 24 and ahead in 1, by a mean of 0.039.
+#'   \item \code{basis = "sym"}: the score form is usually the better choice, and at
+#'     high discrimination it is decisively so. It was ahead in 21 of the same 32
+#'     scenarios; against a probit truth at high discrimination its power was 0.598
+#'     against the unit form's 0.096, and 0.834 against 0.506, at nominal size.
+#'     Weighting each column by \eqn{\sqrt{V_g}} gives the extreme groups more
+#'     weight, and the symmetric shape \eqn{\eta|\eta|} is carried by those groups;
+#'     the cubic basis already spans them through its own columns.
+#' }
+#' \strong{Data quality overrides this.} The score weighting is the more fragile of
+#' the two when a few records carry corrupted predictions, because it leans on
+#' exactly the extreme groups such records occupy. With 25 corrupted covariates in
+#' 1000 observations and a correct model otherwise, \code{poly3} with
+#' \code{weights = "score"} raised its false-alarm rate to 0.894 where the unit
+#' form reached 0.344. When the data may contain corrupted predictors, use
+#' \code{weights = "unit"} whatever the basis.
 #'
 #' \strong{External mode.} With \code{external = TRUE} the predicted probabilities
 #' are taken as frozen, as when a published model is checked on new data with its
@@ -115,12 +135,12 @@
 #'   \code{basis = "ensemble"}, the return is that of \code{\link{def.ensemble.gof}}.
 #'
 #' @references
-#' Ebrahim EK, El-Kotory A (2026). "A Directional Hosmer-Lemeshow Goodness-of-Fit
-#' Test for Sparse Logistic Regression." arXiv:2607.15454 [stat.ME].
-#' \doi{10.48550/arXiv.2607.15454}
+#' Ebrahim EK, Khattab IG, El-Kotory A (2026). "A Modified Hosmer-Lemeshow
+#' Goodness-of-Fit Test for Asymmetric Links: Second-Order Power and Robustness."
+#' arXiv:2607.15454 [stat.ME]. \doi{10.48550/arXiv.2607.15454}
 #'
-#' Ebrahim EK, El-Kotory A (2026). "EDGE: A Closed-Form Directed Goodness-of-Fit
-#' Test for Sparse Logistic Regression." arXiv:2608.20511 [stat.ME].
+#' Ebrahim EK, Hussein OAE-A, El-Kotory A (2026). "A Grouped Calibration Test for Logistic
+#' Regression That Tolerates a Few Corrupted Records." arXiv:2608.20511 [stat.ME].
 #' \doi{10.48550/arXiv.2608.20511}
 #'
 #' @author Ebrahim Khaled Ebrahim \email{ebrahimkhaled@@alexu.edu.eg}
@@ -161,7 +181,17 @@ def.gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
                     basis   = c("poly3", "poly2", "stukel", "sym", "ensemble"),
                     method  = c("satterthwaite", "imhof"),
                     weights = c("unit", "score"),
-                    external = FALSE) {
+                    external = FALSE)
+  .def_gof(object, predicted_probs, X, G, basis, method, weights, external)
+
+# Internal: the body of def.gof(). With keep = TRUE the row also carries the grouped pieces the
+# statistic was built from, as attr(, "details"), for edge.gof() and plot.edge_gof(). The numbers
+# are the same either way; def.gof() itself never keeps them.
+.def_gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
+                     basis   = c("poly3", "poly2", "stukel", "sym", "ensemble"),
+                     method  = c("satterthwaite", "imhof"),
+                     weights = c("unit", "score"),
+                     external = FALSE, keep = FALSE) {
 
   basis   <- match.arg(basis)
   method  <- match.arg(method)
@@ -174,7 +204,7 @@ def.gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
 
   if (external)
     return(.def_external(object, predicted_probs = predicted_probs, X = X, G = G,
-                         basis = basis, weights = weights))
+                         basis = basis, weights = weights, keep = keep))
 
   if (basis == "ensemble")
     return(def.ensemble.gof(object, predicted_probs = predicted_probs, X = X, G = G,
@@ -185,8 +215,8 @@ def.gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
     if (object$family$family != "binomial")
       stop("'object' must be a binomial glm (or pass y, predicted_probs, X).")
     y   <- as.numeric(object$y)
-    ph  <- pmin(pmax(as.numeric(stats::fitted(object)), 1e-6), 1 - 1e-6)
-    eta <- as.numeric(stats::predict(object, type = "link"))
+    ph  <- pmin(pmax(as.numeric(object$fitted.values), 1e-6), 1 - 1e-6)
+    eta <- as.numeric(object$linear.predictors)
     dmu <- object$family$mu.eta(eta)
     X   <- stats::model.matrix(object)
     naive <- FALSE
@@ -230,6 +260,7 @@ def.gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
   Vg   <- vapply(idx, function(I) sum(V[I]),   numeric(1))
   pbar <- vapply(idx, function(I) mean(ph[I]), numeric(1))
   r    <- (og - eg) / sqrt(Vg)
+  ng   <- vapply(idx, length, integer(1))
 
   # --- estimation-adjusted covariance ---
   if (naive) {
@@ -270,11 +301,14 @@ def.gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
       k   <- sum(pos)
       S   <- sum(drop(crossprod(ev$vectors[, pos, drop = FALSE], u[ok] / d[ok]))^2 / ev$values[pos])
     } else .def_warn_no_information()
-    return(data.frame(Test = "Directed Ebrahim-Farrington", Basis = basis,
+    out <- data.frame(Test = "Directed Ebrahim-Farrington", Basis = basis,
                       Test_Statistic = if (k > 0L) S else NA_real_,
                       df = if (k > 0L) k else NA_real_, Method = "score",
                       p_value = if (k > 0L) stats::pchisq(S, k, lower.tail = FALSE) else NA_real_,
-                      stringsAsFactors = FALSE))
+                      stringsAsFactors = FALSE)
+    if (keep) attr(out, "details") <- .def_details(r, Zs, og, eg, Vg, ng, pbar, diag(Omega),
+                                                   external = FALSE, adjusted = !naive)
+    return(out)
   }
 
   ZtZ <- crossprod(Z)
@@ -283,24 +317,33 @@ def.gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
 
   lam <- Re(eigen(solve(ZtZ) %*% (t(Z) %*% Omega %*% Z), only.values = TRUE)$values)
   lam <- lam[lam > 1e-9]
-  if (length(lam) == 0) {
-    return(data.frame(Test = "Directed Ebrahim-Farrington", Basis = basis,
-                      Test_Statistic = S, df = NA_real_, Method = method,
-                      p_value = NA_real_, stringsAsFactors = FALSE))
+  out <- if (length(lam) == 0) {
+    data.frame(Test = "Directed Ebrahim-Farrington", Basis = basis,
+               Test_Statistic = S, df = NA_real_, Method = method,
+               p_value = NA_real_, stringsAsFactors = FALSE)
+  } else {
+    data.frame(Test = "Directed Ebrahim-Farrington", Basis = basis,
+               Test_Statistic = S, df = sum(lam)^2 / sum(lam^2), Method = method,
+               p_value = .def_pvalue(S, lam, method), stringsAsFactors = FALSE)
   }
-
-  pval <- .def_pvalue(S, lam, method)
-  nu   <- sum(lam)^2 / sum(lam^2)
-
-  data.frame(Test = "Directed Ebrahim-Farrington", Basis = basis,
-             Test_Statistic = S, df = nu, Method = method, p_value = pval,
-             stringsAsFactors = FALSE)
+  if (keep) attr(out, "details") <- .def_details(r, Z, og, eg, Vg, ng, pbar, diag(Omega),
+                                                 external = FALSE, adjusted = !naive)
+  out
 }
+
+# Internal: the grouped pieces behind one EDGE row, kept for plot.edge_gof(). Pz_r is the part of
+# the residual vector in the span of the basis B (B = Z, or Z sqrt(V_g) for the score form): the
+# shape the test looked for, on the scale of r.
+.def_details <- function(r, B, og, eg, Vg, ng, pbar, omega_diag, external, adjusted)
+  list(r = unname(r), Pz_r = unname(drop(qr.fitted(qr(B), r))), O = unname(og),
+       E = unname(eg), V = unname(Vg), size = unname(as.integer(ng)), pbar = unname(pbar),
+       G = length(r), omega_diag = unname(pmax(omega_diag, 0)), external = external,
+       adjusted = adjusted)
 
 # Internal: the external mode. The predictions are frozen, so nothing is estimated from these data:
 # Omega is the identity, and no score equation absorbs the overall level, so a column of ones joins
 # the basis. S = r' P_Z r is then chi-square on the rank of Z (d + 1 for a d-column basis).
-.def_external <- function(object, predicted_probs, X, G, basis, weights) {
+.def_external <- function(object, predicted_probs, X, G, basis, weights, keep = FALSE) {
   if (basis == "ensemble")
     stop("external = TRUE supports basis = 'poly3', 'poly2', 'stukel' or 'sym', not 'ensemble'.")
   if (weights == "score")
@@ -310,7 +353,7 @@ def.gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
     if (object$family$family != "binomial")
       stop("'object' must be a binomial glm (or pass y and predicted_probs).")
     y  <- as.numeric(object$y)
-    ph <- as.numeric(stats::fitted(object))
+    ph <- as.numeric(object$fitted.values)
   } else {
     if (!is.numeric(object))
       stop("'object' must be a fitted binomial glm or a numeric (0/1) y vector.")
@@ -336,7 +379,8 @@ def.gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
   og   <- as.numeric(rowsum(y,  grp, reorder = TRUE))
   eg   <- as.numeric(rowsum(ph, grp, reorder = TRUE))
   Vg   <- as.numeric(rowsum(V,  grp, reorder = TRUE))
-  pbar <- eg / as.numeric(rowsum(rep(1, n), grp, reorder = TRUE))
+  ng   <- as.numeric(rowsum(rep(1, n), grp, reorder = TRUE))
+  pbar <- eg / ng
   r    <- (og - eg) / sqrt(Vg)
 
   # --- basis with the constant column, scaled, then reduced to full column rank ---
@@ -348,9 +392,12 @@ def.gof <- function(object, predicted_probs = NULL, X = NULL, G = 10,
   k <- ncol(Z)
   S <- sum(qr.fitted(qr(Z), r)^2)
 
-  data.frame(Test = "Directed Ebrahim-Farrington", Basis = basis, Test_Statistic = S,
-             df = k, Method = "external", p_value = stats::pchisq(S, k, lower.tail = FALSE),
-             stringsAsFactors = FALSE)
+  out <- data.frame(Test = "Directed Ebrahim-Farrington", Basis = basis, Test_Statistic = S,
+                    df = k, Method = "external", p_value = stats::pchisq(S, k, lower.tail = FALSE),
+                    stringsAsFactors = FALSE)
+  if (keep) attr(out, "details") <- .def_details(r, Z, og, eg, Vg, ng, pbar, rep(1, length(r)),
+                                                 external = TRUE, adjusted = FALSE)
+  out
 }
 
 # Internal: build the shape-basis matrix Z from the group mean probabilities.

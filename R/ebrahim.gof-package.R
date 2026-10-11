@@ -31,6 +31,10 @@
 #'     a pretrained convolutional statistic whose level comes from your own
 #'     parametric bootstrap rather than from the network; its map shows where
 #'     the misfit lies.}
+#'   \item{Which part of the model to repair}{\code{\link{localize.external}} for
+#'     frozen predictions on validation data, \code{\link{localize.gof}} for a fitted
+#'     logistic model --- names the intercept, slope, link or covariate part of the
+#'     misfit with familywise error control, and the update the highest one calls for.}
 #'   \item{A penalized (ridge) fit}{\code{\link{calm.gof}} for a closed-form
 #'     reference from a single fit, or \code{\link{shrink.gof}} for the same
 #'     correction referred to a prepivoting bootstrap. Under a penalty the usual
@@ -71,8 +75,9 @@
 #' # the directed test, when misfit is expected in the calibration shape
 #' edge.gof(fit)
 #'
-#' @seealso The vignette
-#'   \code{vignette("ebrahim-gof-toolbox", package = "ebrahim.gof")}.
+#' @seealso The vignettes
+#'   \code{vignette("ebrahim-gof-toolbox", package = "ebrahim.gof")} and
+#'   \code{vignette("extensions", package = "ebrahim.gof")}.
 #'
 #' @concept goodness-of-fit
 #' @concept calibration

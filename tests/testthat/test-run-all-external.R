@@ -8,7 +8,7 @@ test_that("run.all.external returns one row per test in the battery format", {
   expect_s3_class(out, "gof_battery")
   expect_named(out, c("Test", "Family", "Statistic", "df", "p_value", "Note"))
   expect_true(all(c("EDGE (G=10)", "Cox recalibration", "Calibration-in-the-large", "Spiegelhalter-z",
-                    "Hosmer-Lemeshow (external)", "Stukel (offset)", "O/E ratio", "Calibration slope",
+                    "Osius-Rojek (external)", "Hosmer-Lemeshow (external)", "Stukel (offset)", "O/E ratio", "Calibration slope",
                     "c-statistic (AUC)") %in% out$Test))
   expect_true(any(grepl("^EDGE \\(G=auto, 24\\)$", out$Test)))
   expect_false("le Cessie (external)" %in% out$Test)
@@ -49,6 +49,39 @@ test_that("the closed-form rows match hand computations", {
                sum((O - E)^2 / (E * (1 - E / ng))), tolerance = 1e-10)
   expect_equal(out$df[out$Test == "Hosmer-Lemeshow (external)"], 10)
   expect_equal(out$Statistic[out$Test == "O/E ratio"], sum(y) / sum(p), tolerance = 1e-12)
+  zor <- (sum((y - p)^2 / v) - n) / sqrt(sum((1 - 2 * p)^2 / v))
+  expect_equal(out$Statistic[out$Test == "Osius-Rojek (external)"], zor, tolerance = 1e-12)
+  expect_equal(out$p_value[out$Test == "Osius-Rojek (external)"], 2 * pnorm(-abs(zor)), tolerance = 1e-12)
+})
+
+test_that("Stukel (offset) is the score test of the two terms at the null", {
+  set.seed(16)
+  n <- 800
+  p <- plogis(rnorm(n, -1, 1.3))
+  y <- rbinom(n, 1, p)
+  out <- run.all.external(y, p)
+  lp <- qlogis(p); v <- p * (1 - p)
+  Z <- cbind(0.5 * lp^2 * (lp >= 0), -0.5 * lp^2 * (lp < 0))
+  U <- crossprod(Z, y - p)
+  S <- as.numeric(t(U) %*% solve(t(Z) %*% (Z * v)) %*% U)
+  expect_equal(out$Statistic[out$Test == "Stukel (offset)"], S, tolerance = 1e-10)
+  expect_equal(out$df[out$Test == "Stukel (offset)"], 2)
+  # no risk above one half: the upper term is empty and the test has one degree of freedom
+  p2 <- plogis(rnorm(n, -3, 0.5)); p2 <- pmin(p2, 0.49)
+  y2 <- rbinom(n, 1, p2)
+  out2 <- run.all.external(y2, p2)
+  expect_equal(out2$df[out2$Test == "Stukel (offset)"], 1)
+  expect_true(is.finite(out2$p_value[out2$Test == "Stukel (offset)"]))
+})
+
+test_that("the external Osius-Rojek moments are exact for Bernoulli outcomes", {
+  p <- c(0.05, 0.2, 0.5, 0.7, 0.93)
+  v <- p * (1 - p)
+  # each term takes (1 - p)/p with probability p and p/(1 - p) otherwise
+  m1 <- p * (1 - p) / p + (1 - p) * p / (1 - p)
+  m2 <- p * ((1 - p) / p)^2 + (1 - p) * (p / (1 - p))^2
+  expect_equal(m1, rep(1, 5), tolerance = 1e-12)
+  expect_equal(m2 - 1, (1 - 2 * p)^2 / v, tolerance = 1e-12)
 })
 
 test_that("an overfitted model is flagged by the recalibration and directed tests", {

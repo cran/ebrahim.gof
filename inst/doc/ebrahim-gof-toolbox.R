@@ -14,6 +14,9 @@ set.seed(1)
 battery <- run.all.gof(fit, include_slow = FALSE, install = "no")
 battery
 
+## ----battery-summary----------------------------------------------------------
+summary(battery)
+
 ## ----grouped------------------------------------------------------------------
 data("gof_demo_grouped", package = "ebrahim.gof")
 fit_g <- glm(outcome ~ age + bmi + sex + treatment,
@@ -28,6 +31,42 @@ ef.gof(fit)                   # the omnibus EF test
 
 ## ----ensemble-----------------------------------------------------------------
 def.ensemble.gof(fit)
+
+## ----edge-plot, fig.height = 3.6----------------------------------------------
+e <- edge.gof(fit)
+plot(e)
+
+## ----external-----------------------------------------------------------------
+dev <- gof_demo[1:400, ]
+val <- gof_demo[401:800, ]
+covs <- c("age", "bmi", "sex", "treatment")
+fit_dev <- glm(outcome ~ age + bmi + sex + treatment, data = dev, family = binomial)
+p_val <- predict(fit_dev, newdata = val, type = "response")   # frozen
+run.all.external(val$outcome, p_val)
+
+## ----external-edge, fig.height = 3.6------------------------------------------
+e_ext <- edge.gof(y = val$outcome, predicted_probs = p_val, external = TRUE)
+e_ext
+plot(e_ext, scale = "rate")
+
+## ----localize, fig.height = 3.4-----------------------------------------------
+loc <- localize.gof(fit, B = 199, seed = 1)
+loc
+plot(loc)
+
+## ----localize-external, fig.height = 3.4--------------------------------------
+loc_ext <- localize.external(val$outcome, p_val, val[, covs], M = 199, seed = 1)
+plot(loc_ext)
+
+## ----stream-------------------------------------------------------------------
+set.seed(2)
+s <- edge.stream(p_ref = p_val, G = 10)
+for (day in 1:60) {                       # 100 patients a day
+  lp <- rnorm(100, -1, 1)
+  shift <- if (day > 30) 0.5 else 0      # from day 31 the event rate drifts upwards
+  s <- update(s, rbinom(100, 1, plogis(lp + shift)), plogis(lp))
+  if (day %in% c(30, 60)) print(s)
+}
 
 ## -----------------------------------------------------------------------------
 set.seed(4)

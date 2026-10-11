@@ -14,8 +14,9 @@ test_that("ef.gof works with binary data", {
   result <- ef.gof(y, predicted_probs)
   
   expect_s3_class(result, "data.frame")
-  expect_equal(ncol(result), 3)
-  expect_equal(names(result), c("Test", "Test_Statistic", "p_value"))
+  expect_equal(names(result), c("Test", "Test_Statistic", "df", "Reference", "p_value",
+                                "G", "HL", "C"))
+  expect_equal(result$Test_Statistic, result$HL - result$C)
   expect_equal(result$Test, "Ebrahim-Farrington")
   expect_true(is.numeric(result$Test_Statistic))
   expect_true(is.numeric(result$p_value))
@@ -71,7 +72,11 @@ test_that("input validation works correctly", {
     ef.gof(y, predicted_probs, G = 1),
     "must be a single integer >= 2"
   )
-  
+  expect_error(
+    ef.gof(y, predicted_probs, G = 4.5),             # would give 5 groups of unequal size
+    "must be a single integer >= 2"
+  )
+
   expect_error(
     ef.gof(y, predicted_probs, G = n + 10),
     "cannot exceed sample size"
@@ -146,14 +151,17 @@ test_that("handles edge cases gracefully", {
   y_small <- c(0, 1, 0, 1)
   pred_small <- c(0.2, 0.8, 0.3, 0.7)
   
-  result_small <- ef.gof(y_small, pred_small, G = 4)
+  # one record per group: far below the size rule of the chi-square reference
+  expect_warning(result_small <- ef.gof(y_small, pred_small, G = 4),
+                 class = "ef_sparse_groups")
   expect_true(is.numeric(result_small$p_value))
-  
+
   # Extreme probabilities (but within bounds)
   y_extreme <- c(0, 0, 1, 1)
   pred_extreme <- c(0.001, 0.001, 0.999, 0.999)
-  
-  result_extreme <- ef.gof(y_extreme, pred_extreme, G = 4)
+
+  expect_warning(result_extreme <- ef.gof(y_extreme, pred_extreme, G = 4),
+                 class = "ef_sparse_groups")
   expect_true(is.numeric(result_extreme$p_value))
 })
 
@@ -173,4 +181,15 @@ test_that("test produces consistent results with same seed", {
   result2 <- ef.gof(y2, predicted_probs2, G = 10)
   
   expect_identical(result1, result2)
-}) 
+})
+
+test_that("a glm fitted with na.exclude gives the test on its complete records", {
+  set.seed(5)
+  d <- data.frame(x = rnorm(300))
+  d$y <- rbinom(300, 1, plogis(d$x))
+  d$x[1:4] <- NA
+  f1 <- glm(y ~ x, family = binomial, data = d, na.action = na.exclude)
+  f2 <- glm(y ~ x, family = binomial, data = d[-(1:4), ])
+  expect_equal(ef.gof(f1)$p_value, ef.gof(f2)$p_value)
+  expect_equal(ef.gof(f1, reference = "normal")$p_value, ef.gof(f2, reference = "normal")$p_value)
+})
